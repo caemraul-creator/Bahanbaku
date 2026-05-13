@@ -959,9 +959,8 @@
             td {
                 padding: 9px 10px;
             }
-
-            .form-row,
-            .form-row-3 {
+            
+            .form-row, .form-row-3 {
                 grid-template-columns: 1fr;
             }
 
@@ -1130,8 +1129,7 @@
                         <i class="ti ti-map-pin"></i> Kalipucang, Jepara
                     </div>
                     <div class="wdiv"></div>
-                    <div class="wstats" id="ws-container-Kalipucang"
-                        style="display: flex; gap: 15px; flex-wrap: nowrap;">
+                    <div class="wstats" id="ws-container-Kalipucang" style="display: flex; gap: 15px; flex-wrap: nowrap;">
                         <!-- JS dynamic -->
                     </div>
                 </div>
@@ -1182,11 +1180,9 @@
                     <input type="text" id="search-input" placeholder="Cari kode, supplier, plat..."
                         oninput="renderTable()" />
                 </div>
-                <div class="search-wrap"
-                    style="width: auto; min-width: 140px; background: transparent; border-color: #c2e2ce;">
+                <div class="search-wrap" style="width: auto; min-width: 140px; background: transparent; border-color: #c2e2ce;">
                     <i class="ti ti-filter" style="color: #a0a09c;"></i>
-                    <select class="filter-sel" id="filter-kat" onchange="renderTable()"
-                        style="border: none; padding-left: 36px; height: 100%; width: 100%; background: transparent; outline: none; -webkit-appearance: none; appearance: none;">
+                    <select class="filter-sel" id="filter-kat" onchange="renderTable()" style="border: none; padding-left: 36px; height: 100%; width: 100%; background: transparent; outline: none; -webkit-appearance: none; appearance: none;">
                         <option value="">Kategori</option>
                         <option>Z/C+</option>
                         <option>Z/C-</option>
@@ -1194,16 +1190,13 @@
                     </select>
                 </div>
                 <div style="display: flex; gap: 8px; margin-left: auto;">
-                    <button class="btn-sm" onclick="bukaModal()"
-                        style="background-color: #0d9463; color: white; border: none; font-weight: 500;">
+                    <button class="btn-sm" onclick="bukaModal()" style="background-color: #0d9463; color: white; border: none; font-weight: 500;">
                         <i class="ti ti-plus"></i> Tambah
                     </button>
-                    <button class="btn-sm btn-outline"
-                        style="color: #0d9463; border-color: #c2e2ce; background: transparent; font-weight: 500;">
+                    <button class="btn-sm btn-outline" onclick="bukaModalExport()" style="color: #0d9463; border-color: #c2e2ce; background: transparent; font-weight: 500;">
                         <i class="ti ti-download"></i> Export
                     </button>
-                    <button class="btn-sm btn-outline" onclick="bukaModalImport()"
-                        style="color: #e07a2a; border-color: #f7b781; background: transparent; font-weight: 500;">
+                    <button class="btn-sm btn-outline" onclick="bukaModalImport()" style="color: #e07a2a; border-color: #f7b781; background: transparent; font-weight: 500;">
                         <i class="ti ti-upload"></i> Import
                     </button>
                 </div>
@@ -1350,8 +1343,7 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label">Jumlah Sak Surat Jalan</label>
-                            <input type="text" inputmode="numeric" class="form-input" id="f-sak-sj"
-                                oninput="hitungSelisih()" />
+                            <input type="text" inputmode="numeric" class="form-input" id="f-sak-sj" oninput="hitungSelisih()" />
                         </div>
                         <div class="form-group" style="margin-bottom: 0;">
                             <label class="form-label">Selisih Sak</label>
@@ -1385,9 +1377,7 @@
 
                 <div class="form-group" style="margin-top: 1.25rem; margin-bottom: 0;">
                     <label class="form-label">Note / Catatan Penting</label>
-                    <textarea id="f-catatan" class="form-input" rows="2"
-                        placeholder="Masukkan catatan penting jika ada..."
-                        style="resize: vertical; min-height: 60px; font-family: inherit;"></textarea>
+                    <textarea id="f-catatan" class="form-input" rows="2" placeholder="Masukkan catatan penting jika ada..." style="resize: vertical; min-height: 60px; font-family: inherit;"></textarea>
                 </div>
 
                 <div class="form-actions">
@@ -1401,42 +1391,73 @@
     </div>
 
     <!-- ===== TOAST ===== -->
-    <div class="overlay" id="modal-import-overlay" onclick="if(event.target===this) tutupModalImport()">
-        <div class="modal" style="max-width: 500px;">
-            <div class="modal-head">
-                <h2 class="modal-judul">Import Data Excel</h2>
-                <button class="modal-close" onclick="tutupModalImport()"><i class="ti ti-x"></i></button>
-            </div>
-            <div class="modal-body">
-                <div
-                    style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 12px; line-height: 1.6;">
-                    <strong>Instruksi:</strong><br>
-                    1. File Excel (.xlsx) dengan kolom: Nama, Kategori, Stok, Supplier, Tanggal, SJ_Kg, SJ_Sak,
-                    ECMU/SPNU, Petugas, QC, Plat, No Timbangan, Catatan.<br>
-                    2. Header di baris pertama akan dilewati.
+        <div class="overlay" id="modal-import-overlay" onclick="if(event.target===this) tutupModalImport()">
+            <div class="modal" style="max-width: 500px;">
+                <div class="modal-head">
+                    <h2 class="modal-judul">Import Data Excel</h2>
+                    <button class="modal-close" onclick="tutupModalImport()"><i class="ti ti-x"></i></button>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Pilih File Excel</label>
-                    <input type="file" id="f-import-file" accept=".xlsx, .xls" class="form-input"
-                        style="padding: 10px;" />
+                <div class="modal-body">
+                    <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 12px; line-height: 1.6;">
+                        <strong>Instruksi:</strong><br>
+                        1. File Excel (.xlsx) dengan kolom: Nama, Kategori, Stok, Supplier, Tanggal, SJ_Kg, SJ_Sak, ECMU/SPNU, Petugas, QC, Plat, No Timbangan, Catatan.<br>
+                        2. Header di baris pertama akan dilewati.
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Pilih File Excel</label>
+                        <input type="file" id="f-import-file" accept=".xlsx, .xls" class="form-input" style="padding: 10px;" />
+                    </div>
                 </div>
-            </div>
-            <div class="modal-foot">
-                <button class="btn btn-outline" onclick="unduhTemplate()"
-                    style="margin-right: auto; background: var(--info-bg); color: var(--info-text); border: 0.5px solid var(--info-border);">
-                    <i class="ti ti-download"></i> Unduh Template
-                </button>
-                <button class="btn btn-outline" onclick="tutupModalImport()">Batal</button>
-                <button class="btn btn-primary" id="btn-proses-import" onclick="prosesImport()">
-                    <i class="ti ti-upload"></i> Mulai Import
-                </button>
+                <div class="modal-foot">
+                    <button class="btn btn-outline" onclick="unduhTemplate()" style="margin-right: auto; background: var(--info-bg); color: var(--info-text); border: 0.5px solid var(--info-border);">
+                        <i class="ti ti-download"></i> Unduh Template
+                    </button>
+                    <button class="btn btn-outline" onclick="tutupModalImport()">Batal</button>
+                    <button class="btn btn-primary" id="btn-proses-import" onclick="prosesImport()">
+                        <i class="ti ti-upload"></i> Mulai Import
+                    </button>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="toast" id="toast">
-        <i class="ti ti-check"></i><span id="toast-msg"></span>
-    </div>
+        <div class="toast" id="toast">
+            <i class="ti ti-check"></i><span id="toast-msg"></span>
+        </div>
+
+        <!-- ===== MODAL EXPORT ===== -->
+        <div class="overlay" id="modal-export-overlay" onclick="if(event.target===this) tutupModalExport()">
+            <div class="modal" style="max-width: 420px;">
+                <div class="modal-title">
+                    <span>Export Data Excel</span>
+                    <button class="modal-close" onclick="tutupModalExport()"><i class="ti ti-x"></i></button>
+                </div>
+                <div style="margin-bottom: 1.25rem;">
+                    <p style="font-size: 13px; color: var(--text2); margin-bottom: 1rem;">Pilih data yang ingin diekspor untuk gudang <strong id="export-gudang-lbl"></strong>:</p>
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; padding: 12px; border: 0.5px solid var(--border); border-radius: var(--radius); transition: background 0.15s;" id="opt-semua-wrap">
+                            <input type="radio" name="export-opt" value="semua" id="opt-semua" checked style="margin-top: 2px; accent-color: #0d9463;">
+                            <div>
+                                <div style="font-size: 13px; font-weight: 600;">Semua Data</div>
+                                <div style="font-size: 12px; color: var(--text2);" id="opt-semua-lbl">Ekspor seluruh data gudang</div>
+                            </div>
+                        </label>
+                        <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; padding: 12px; border: 0.5px solid var(--border); border-radius: var(--radius); transition: background 0.15s;" id="opt-filter-wrap">
+                            <input type="radio" name="export-opt" value="filter" id="opt-filter" style="margin-top: 2px; accent-color: #0d9463;">
+                            <div>
+                                <div style="font-size: 13px; font-weight: 600;">Sesuai Filter Aktif</div>
+                                <div style="font-size: 12px; color: var(--text2);" id="opt-filter-lbl">Ekspor hasil pencarian/filter saat ini</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-sm btn-outline" onclick="tutupModalExport()" style="flex: 1; justify-content: center;">Batal</button>
+                    <button class="btn-sm" onclick="eksporData()" id="btn-proses-export" style="flex: 1; justify-content: center; background: #0d9463;">
+                        <i class="ti ti-file-spreadsheet"></i> Download Excel
+                    </button>
+                </div>
+            </div>
+        </div>
 
     <script>
         // URL diambil dari config.js
@@ -1461,7 +1482,7 @@
                 try {
                     const data = await apiFetch("GET", g);
                     const summary = {};
-
+                    
                     data.forEach(d => {
                         let region = "Lainnya";
                         const n = (d.nama || "").toLowerCase();
@@ -1479,7 +1500,7 @@
 
                     let html = "";
                     const order = ["Sumatra", "Sulawesi", "Kalimantan", "Maluku", "Nusa Tenggara", "Lokal", "Arang Kayu", "Residu", "Lainnya"];
-
+                    
                     order.forEach(reg => {
                         if (summary[reg]) {
                             html += `
@@ -1590,22 +1611,22 @@
             if (!container) return;
 
             let totalWeight = 0;
-            const summary = {};
-
+            const summary = {}; 
+            
             dataBahan.forEach(d => {
                 const w = parseFloat(d.stok) || 0;
                 totalWeight += w;
                 const nama = d.nama || "Tanpa Nama";
                 summary[nama] = (summary[nama] || 0) + w;
             });
-
+            
             let html = `
                 <div class="scard" style="border-left: 4px solid var(--text2); background: var(--bg);">
                     <div class="scard-lbl">Total Bongkaran</div>
                     <div class="scard-val">${dataBahan.length}</div>
                 </div>
             `;
-
+            
             Object.keys(summary).sort((a, b) => {
                 const getPrio = (name) => {
                     const n = name.toLowerCase();
@@ -1631,7 +1652,7 @@
                     </div>
                 `;
             });
-
+            
             container.innerHTML = html;
         }
 
@@ -1719,19 +1740,19 @@
         <td><span style="background: #eaf3de; color: #3b6d11; padding: 2px 8px; border-radius: 12px; font-weight: 500; font-size: 11px;">${esc(d.kat || "-")}</span></td>
         <td>${d.stok ? formatLokal(d.stok) : "0"}</td>
         <td>${(() => {
-                                let totalSakRiil = 0;
-                                try {
-                                    const sData = JSON.parse(d.scalingData || "[]");
-                                    sData.forEach(row => {
-                                        if (row) {
-                                            Object.keys(row).forEach(colIdx => {
-                                                totalSakRiil += parseInt(row[colIdx].sak) || 0;
-                                            });
-                                        }
-                                    });
-                                } catch (e) { }
-                                return totalSakRiil || "-";
-                            })()}</td>
+            let totalSakRiil = 0;
+            try {
+                const sData = JSON.parse(d.scalingData || "[]");
+                sData.forEach(row => {
+                    if (row) {
+                        Object.keys(row).forEach(colIdx => {
+                            totalSakRiil += parseInt(row[colIdx].sak) || 0;
+                        });
+                    }
+                });
+            } catch(e) {}
+            return totalSakRiil || "-";
+        })()}</td>
         <td>${esc(d.petugas || "-")}</td>
         <td>
             <div class="act-wrap">
@@ -1768,7 +1789,7 @@
         }
 
         // ===== MODAL & SCALLING =====
-
+        
         // Fungsi helper untuk parsing angka (koma jadi titik)
         function parseLokal(val) {
             if (!val) return 0;
@@ -1779,7 +1800,7 @@
         function formatLokal(num) {
             return new Intl.NumberFormat('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(num);
         }
-
+        
         let rawTotalKg = 0; // Simpan nilai asli tanpa format
 
         function initScallingTable() {
@@ -1836,7 +1857,7 @@
             const total = rawTotalKg;
             const sjInputRaw = document.getElementById("f-jum-sj").value;
             const sj = parseLokal(sjInputRaw);
-
+            
             if (sjInputRaw !== "") {
                 document.getElementById("f-selisih-bongkaran").value = formatLokal(total - sj);
             } else {
@@ -1846,7 +1867,7 @@
             const sakTotal = parseInt(document.getElementById("f-sak-total").value) || 0;
             const sjSakRaw = document.getElementById("f-sak-sj").value;
             const sakSj = parseInt(sjSakRaw) || 0;
-
+            
             if (sjSakRaw !== "") {
                 document.getElementById("f-selisih-sak").value = (sakTotal - sakSj);
             } else {
@@ -1872,7 +1893,7 @@
                 document.getElementById("f-supplier").value = bahan.supplier || "";
                 document.getElementById("f-kat").value = bahan.kat || "";
                 document.getElementById("f-catatan").value = bahan.catatan || "";
-
+                
                 if (bahan.tanggal) {
                     const d = new Date(bahan.tanggal);
                     if (!isNaN(d.getTime())) {
@@ -1901,11 +1922,11 @@
                 document.getElementById("f-qc").value = bahan.qc || "";
                 document.getElementById("f-notimbang").value = bahan.notimbang || "";
                 document.getElementById("f-plat").value = bahan.plat || "";
-
+                
                 rawTotalKg = parseFloat(bahan.stok) || 0;
                 document.getElementById("f-jum-total").value = rawTotalKg > 0 ? formatLokal(rawTotalKg) : "";
                 document.getElementById("f-sak-total").value = "";
-
+                
                 if (bahan.scalingData) {
                     try {
                         const parsedData = JSON.parse(bahan.scalingData);
@@ -1926,7 +1947,7 @@
                         console.error("Gagal parse scalingData", e);
                     }
                 }
-
+                
                 hitungSelisih();
             } else {
                 document.getElementById("f-is-edit").value = "";
@@ -1935,7 +1956,7 @@
                 document.getElementById("f-kat").value = "";
                 document.getElementById("f-catatan").value = "";
                 document.getElementById("f-tanggal").valueAsDate = new Date();
-
+                
                 document.getElementById("f-jum-sj").value = "";
                 document.getElementById("f-sak-sj").value = "";
                 document.getElementById("f-ecmu").value = "";
@@ -1943,7 +1964,7 @@
                 document.getElementById("f-qc").value = "";
                 document.getElementById("f-notimbang").value = "";
                 document.getElementById("f-plat").value = "";
-
+                
                 hitungScalling();
             }
 
@@ -1978,7 +1999,7 @@
             else if (n.includes("arang kayu")) prefix = "AK";
             else if (n.includes("residu")) prefix = "RD";
             else if (n.includes("lokal")) prefix = "LK";
-
+            
             const d = tanggalStr ? new Date(tanggalStr) : new Date();
             const yyyy = d.getFullYear();
             const mm = String(d.getMonth() + 1).padStart(2, '0');
@@ -2075,11 +2096,11 @@
         async function hapusBahan(id) {
             if (!id) return;
             if (!confirm("Apakah Anda yakin ingin menghapus data dengan ID: " + id + "?")) return;
-
+            
             try {
                 const res = await apiFetch("POST", gudangAktif, { action: "delete", id: id });
                 if (res.error) throw new Error(res.error);
-
+                
                 showToast("Data berhasil dihapus");
                 await muatData();
             } catch (err) {
@@ -2172,23 +2193,23 @@
                         }
 
                         // --- Ambil metadata berdasarkan label (tidak tergantung nomor baris) ---
-                        const tglRow = findRowByLabel("Tanggal Bongkaran");
-                        const stokRow = findRowByLabel("Jumlah Total");
-                        const sjKgRow = findRowByLabel("Jumlah Surat Jalan");
+                        const tglRow   = findRowByLabel("Tanggal Bongkaran");
+                        const stokRow  = findRowByLabel("Jumlah Total");
+                        const sjKgRow  = findRowByLabel("Jumlah Surat Jalan");
                         const sjSakRow = findRowByLabel("Jumlah Sak Surat Jalan");
-                        const ecmuRow = findRowByLabel("SPNU") || findRowByLabel("ECMU");
-                        const petRow = findRowByLabel("Petugas Timbang");
-                        const qcRow = findRowByLabel("QC");
+                        const ecmuRow  = findRowByLabel("SPNU") || findRowByLabel("ECMU");
+                        const petRow   = findRowByLabel("Petugas Timbang");
+                        const qcRow    = findRowByLabel("QC");
                         const noTimRow = findRowByLabel("Nomor Timbangan");
 
-                        const tglStr = tglRow ? parseExDate(tglRow[4]) : "";
-                        const stok = stokRow ? parseExNum(stokRow[4]) : 0;
-                        const sjKg = sjKgRow ? parseExNum(sjKgRow[4]) : 0;
-                        const sjSak = sjSakRow ? (parseInt(parseExNum(sjSakRow[4])) || 0) : 0;
-                        const ecmu = ecmuRow ? String(ecmuRow[4] || "0") : "0";
-                        const pet = petRow ? String(petRow[4] || "") : "";
-                        const qc = qcRow ? String(qcRow[4] || "") : "";
-                        const noTim = noTimRow ? String(noTimRow[4] || "") : "";
+                        const tglStr = tglRow   ? parseExDate(tglRow[4])           : "";
+                        const stok   = stokRow  ? parseExNum(stokRow[4])            : 0;
+                        const sjKg   = sjKgRow  ? parseExNum(sjKgRow[4])            : 0;
+                        const sjSak  = sjSakRow ? (parseInt(parseExNum(sjSakRow[4])) || 0) : 0;
+                        const ecmu   = ecmuRow  ? String(ecmuRow[4]  || "0")        : "0";
+                        const pet    = petRow   ? String(petRow[4]   || "")         : "";
+                        const qc     = qcRow    ? String(qcRow[4]    || "")         : "";
+                        const noTim  = noTimRow ? String(noTimRow[4] || "")         : "";
 
                         // --- Bangun colMap: excelColIdx → appSlot (1-8 = Raw, 9 = Rontokan) ---
                         // Baca baris header (index 3) untuk deteksi kolom Rontokan
@@ -2245,7 +2266,7 @@
                                 if (val > 0) {
                                     const isRontokan = slot === 9;
                                     const total = sakTotPerCol[slot] || 0;
-                                    const cnt = cellCount[slot] || 1;
+                                    const cnt   = cellCount[slot] || 1;
                                     let sak = isRontokan ? 0 : Math.floor(total / cnt);
                                     sakUsed[slot] += sak;
                                     if (sakUsed[slot] > total) { sak -= (sakUsed[slot] - total); sakUsed[slot] = total; }
@@ -2266,8 +2287,8 @@
                             if (!r[0]) continue;
                             const id = generateOtomatisId(String(r[0]), r[4]);
                             final.push([
-                                id, r[0] || "", r[1] || "", r[2] || 0, 0, "Kg", r[3] || "", r[4] || "", r[5] || 0, r[6] || 0,
-                                r[7] || "", r[8] || "", r[9] || "", r[11] || "", r[12] || "", "", r[10] || ""
+                                id, r[0]||"", r[1]||"", r[2]||0, 0, "Kg", r[3]||"", r[4]||"", r[5]||0, r[6]||0, 
+                                r[7]||"", r[8]||"", r[9]||"", r[11]||"", r[12]||"", "", r[10]||""
                             ]);
                         }
                     }
@@ -2289,36 +2310,157 @@
                 [],
                 ["No.", "Raw 1", "Raw 2", "Raw 3", "Raw 4", "Raw 5", "Raw 6", "Raw 7", "Raw 8", "Rontokan"]
             ];
-
-            for (let i = 1; i <= 20; i++) {
+            
+            for(let i=1; i<=20; i++) {
                 data.push([i, 200.5, 210.1, 195.2, 188.4, 202.3, 199.9, 214.3, 205.7, 55.4]);
             }
-
+            
             data.push([]);
             data.push(["JML", 4010, 4202, 3904, 3768, 4046, 3998, 4286, 4114, 1108]);
             data.push(["Sak", 80, 80, 80, 80, 80, 80, 80, 80, 0]);
             data.push([]);
             data.push([]);
             data.push(["Tanggal Bongkaran", "", "", ":", "12/05/2026"]);
-            data.push(["Jumlah Total", "", "", ":", 33436, "Kg"]);
-            data.push(["Jumlah Sak Total", "", "", ":", 640, "Sak"]);
+            data.push(["Jumlah Total",      "", "", ":", 33436, "Kg"]);
+            data.push(["Jumlah Sak Total",  "", "", ":", 640,   "Sak"]);
             data.push([]);
             data.push([]);
-            data.push(["Jumlah Surat Jalan", "", "", ":", 33500, "Kg"]);
-            data.push(["Jumlah Sak Surat Jalan", "", "", ":", 645, "Sak"]);
+            data.push(["Jumlah Surat Jalan",     "", "", ":", 33500, "Kg"]);
+            data.push(["Jumlah Sak Surat Jalan", "", "", ":", 645,   "Sak"]);
             data.push([]);
             data.push(["Selisih Bongkaran", "", "", ":", 64, "Kg"]);
-            data.push(["Selisih Sak", "", "", ":", 5, "Sak"]);
-            data.push(["SPNU", "", "", ":", "0"]);
+            data.push(["Selisih Sak",       "", "", ":", 5,  "Sak"]);
+            data.push(["SPNU",              "", "", ":", "0"]);
             data.push([]);
             data.push(["Petugas Timbang", "", "", ":", "Bagus"]);
-            data.push(["QC", "", "", ":", "Narno"]);
+            data.push(["QC",              "", "", ":", "Narno"]);
             data.push([]);
             data.push(["Nomor Timbangan", "", "", ":", "C1"]);
 
             const ws = XLSX.utils.aoa_to_sheet(data);
             XLSX.utils.book_append_sheet(wb, ws, "Laporan Scalling");
             XLSX.writeFile(wb, "Template_Import_CocoRiki.xlsx");
+        }
+        
+        // ===== EXPORT =====
+        function bukaModalExport() {
+            const all = dataBahan.length;
+            const filtered = getFiltered().length;
+            document.getElementById("export-gudang-lbl").textContent = gudangAktif;
+            document.getElementById("opt-semua-lbl").textContent = `${all} data tersedia`;
+            document.getElementById("opt-filter-lbl").textContent = `${filtered} data sesuai filter`;
+            document.getElementById("opt-semua").checked = true;
+            document.getElementById("modal-export-overlay").classList.add("open");
+        }
+
+        function tutupModalExport() {
+            document.getElementById("modal-export-overlay").classList.remove("open");
+        }
+
+        function eksporData() {
+            const useFilter = document.getElementById("opt-filter").checked;
+            const source = useFilter ? getFiltered() : dataBahan;
+            if (!source.length) { showToast("Tidak ada data untuk diekspor", true); return; }
+
+            const btn = document.getElementById("btn-proses-export");
+            btn.disabled = true;
+            btn.innerHTML = '<i class="ti ti-loader"></i> Memproses...';
+
+            try {
+                // --- Hitung total sak dari scalingData ---
+                function hitungTotalSak(d) {
+                    let tot = 0;
+                    try {
+                        const sd = JSON.parse(d.scalingData || "[]");
+                        sd.forEach(row => {
+                            if (row) Object.values(row).forEach(cell => { tot += parseInt(cell.sak) || 0; });
+                        });
+                    } catch(e) {}
+                    return tot;
+                }
+
+                // --- Header baris ---
+                const header = [
+                    "Kode", "Tanggal", "Material", "Kategori", "Supplier", "Plat",
+                    "No. Timbangan", "Berat Total (Kg)", "Jumlah Sak",
+                    "SJ Kg", "SJ Sak", "Selisih Bongkaran (Kg)", "Selisih Sak",
+                    "ECMU/SPNU", "Petugas", "QC", "Catatan"
+                ];
+
+                const sheetData = [header];
+
+                source.forEach(d => {
+                    const totalSak = hitungTotalSak(d);
+                    const stok     = parseFloat(d.stok)  || 0;
+                    const sjKg     = parseFloat(d.sj_kg) || 0;
+                    const sjSak    = parseInt(d.sj_sak)  || 0;
+                    const selisihKg  = stok > 0 ? parseFloat((stok - sjKg).toFixed(1))  : "";
+                    const selisihSak = totalSak > 0 ? (totalSak - sjSak) : "";
+
+                    // Format tanggal ke dd/mm/yyyy
+                    let tglDisplay = d.tanggal || "";
+                    if (tglDisplay) {
+                        const dt = new Date(tglDisplay);
+                        if (!isNaN(dt.getTime())) {
+                            tglDisplay = `${String(dt.getDate()).padStart(2,'0')}/${String(dt.getMonth()+1).padStart(2,'0')}/${dt.getFullYear()}`;
+                        }
+                    }
+
+                    sheetData.push([
+                        d.id        || "",
+                        tglDisplay,
+                        d.nama      || "",
+                        d.kat       || "",
+                        d.supplier  || "",
+                        d.plat      || "",
+                        d.notimbang || "",
+                        stok        || "",
+                        totalSak    || "",
+                        sjKg        || "",
+                        sjSak       || "",
+                        selisihKg,
+                        selisihSak,
+                        d.ecmu      || "",
+                        d.petugas   || "",
+                        d.qc        || "",
+                        d.catatan   || ""
+                    ]);
+                });
+
+                // --- Buat workbook ---
+                const wb = XLSX.utils.book_new();
+                const ws = XLSX.utils.aoa_to_sheet(sheetData);
+
+                // Set lebar kolom otomatis
+                const colWidths = header.map((h, i) => {
+                    let max = h.length;
+                    sheetData.slice(1).forEach(row => {
+                        const val = String(row[i] ?? "");
+                        if (val.length > max) max = val.length;
+                    });
+                    return { wch: Math.min(max + 2, 40) };
+                });
+                ws['!cols'] = colWidths;
+
+                // Freeze baris header
+                ws['!freeze'] = { xSplit: 0, ySplit: 1 };
+
+                XLSX.utils.book_append_sheet(wb, ws, `Data ${gudangAktif}`);
+
+                // Nama file dengan tanggal hari ini
+                const now = new Date();
+                const tglFile = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+                const suffix = useFilter ? "_Filter" : "_Semua";
+                XLSX.writeFile(wb, `StokBahan_${gudangAktif}${suffix}_${tglFile}.xlsx`);
+
+                showToast(`${source.length} data berhasil diekspor`);
+                tutupModalExport();
+            } catch(err) {
+                showToast("Gagal ekspor: " + err.message, true);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="ti ti-file-spreadsheet"></i> Download Excel';
+            }
         }
 
         function parseExDate(val) {
@@ -2346,10 +2488,10 @@
             }
             return "";
         }
-
+        
         function parseExNum(val) {
             if (typeof val === "number") return val;
-            let s = String(val || "0").replace(/[^\d,.-]/g, "");
+            let s = String(val || "0").replace(/[^\d,.-]/g, ""); 
             if (s.includes(",") && s.includes(".")) s = s.replace(/\./g, "").replace(",", ".");
             else if (s.includes(",")) s = s.replace(",", ".");
             return parseFloat(s) || 0;
