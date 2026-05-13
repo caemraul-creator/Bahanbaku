@@ -1362,7 +1362,7 @@
 
                 <div class="form-row form-row-4" style="margin-top: 1.25rem;">
                     <div class="form-group" style="margin-bottom: 0;">
-                        <label class="form-label">ECMU</label>
+                        <label class="form-label">ECMU/SPNU</label>
                         <input class="form-input" id="f-ecmu" />
                     </div>
                     <div class="form-group" style="margin-bottom: 0;">
@@ -1411,8 +1411,8 @@
                 <div
                     style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 12px; line-height: 1.6;">
                     <strong>Instruksi:</strong><br>
-                    1. File Excel (.xlsx) dengan kolom: Nama, Kategori, Stok, Supplier, Tanggal, SJ_Kg, SJ_Sak, ECMU,
-                    Petugas, QC, Plat, No Timbangan, Catatan.<br>
+                    1. File Excel (.xlsx) dengan kolom: Nama, Kategori, Stok, Supplier, Tanggal, SJ_Kg, SJ_Sak,
+                    ECMU/SPNU, Petugas, QC, Plat, No Timbangan, Catatan.<br>
                     2. Header di baris pertama akan dilewati.
                 </div>
                 <div class="form-group">
@@ -2190,45 +2190,66 @@
                         const qc = qcRow ? String(qcRow[4] || "") : "";
                         const noTim = noTimRow ? String(noTimRow[4] || "") : "";
 
-                        // --- Baca total Sak per kolom dari baris "Sak" ---
+                        // --- Bangun colMap: excelColIdx → appSlot (1-8 = Raw, 9 = Rontokan) ---
+                        // Baca baris header (index 3) untuk deteksi kolom Rontokan
+                        const headerRow = rows[3] || [];
+                        const colMap = {}; // { excelColIdx: appSlot }
+                        let mappedAny = false;
+                        for (let i = 1; i < headerRow.length; i++) {
+                            const lbl = String(headerRow[i] || "").trim();
+                            const rawM = lbl.match(/^Raw\s*(\d+)$/i);
+                            if (rawM) {
+                                colMap[i] = parseInt(rawM[1]);
+                                mappedAny = true;
+                            } else if (/rontokan/i.test(lbl)) {
+                                colMap[i] = 9; // slot Rontokan
+                                mappedAny = true;
+                            }
+                        }
+                        // Fallback: jika header tidak terbaca, pakai index langsung
+                        if (!mappedAny) {
+                            for (let i = 1; i <= 9; i++) colMap[i] = i;
+                        }
+
+                        // --- Baca total Sak per appSlot dari baris "Sak" ---
                         const sakTotRow = findRowByLabel("Sak");
                         const sakTotPerCol = {};
                         if (sakTotRow) {
-                            for (let c = 1; c <= 9; c++) sakTotPerCol[c] = parseInt(sakTotRow[c]) || 0;
+                            for (const [exCol, slot] of Object.entries(colMap)) {
+                                sakTotPerCol[slot] = parseInt(sakTotRow[parseInt(exCol)]) || 0;
+                            }
                         }
 
-                        // Hitung jumlah sel isi per kolom untuk distribusi sak
+                        // Hitung jumlah sel isi per appSlot untuk distribusi sak
                         const cellCount = {};
-                        for (let c = 1; c <= 9; c++) cellCount[c] = 0;
+                        for (let s = 1; s <= 9; s++) cellCount[s] = 0;
                         for (let r = 4; r < 24; r++) {
                             const ra = rows[r] || [];
-                            for (let c = 1; c <= 9; c++) {
-                                if (parseExNum(ra[c]) > 0) cellCount[c]++;
+                            for (const [exCol, slot] of Object.entries(colMap)) {
+                                if (parseExNum(ra[parseInt(exCol)]) > 0) cellCount[slot]++;
                             }
                         }
 
                         // --- Scaling Grid (baris data 1-20, index 4-23) ---
                         const scData = [];
                         const sakUsed = {};
-                        for (let c = 1; c <= 9; c++) sakUsed[c] = 0;
+                        for (let s = 1; s <= 9; s++) sakUsed[s] = 0;
 
                         for (let r = 4; r < 24; r++) {
                             const rowArr = rows[r] || [];
                             const rowObj = {};
                             let hasData = false;
 
-                            for (let c = 1; c <= 9; c++) {
-                                const val = parseExNum(rowArr[c]);
+                            for (const [exCol, slot] of Object.entries(colMap)) {
+                                const val = parseExNum(rowArr[parseInt(exCol)]);
                                 if (val > 0) {
-                                    // Distribusi sak merata per kolom
-                                    const total = sakTotPerCol[c] || 0;
-                                    const cnt = cellCount[c] || 1;
-                                    const isLastFilled = (sakUsed[c] + Math.floor(total / cnt)) >= total - Math.floor(total / cnt);
-                                    let sak = c === 9 ? 0 : Math.floor(total / cnt);
-                                    // Sisa sak ke sel terakhir yang terisi di kolom ini
-                                    sakUsed[c] += sak;
-                                    if (sakUsed[c] > total) { sak -= (sakUsed[c] - total); sakUsed[c] = total; }
-                                    rowObj[c] = { kg: val, sak: sak };
+                                    const isRontokan = slot === 9;
+                                    const total = sakTotPerCol[slot] || 0;
+                                    const cnt = cellCount[slot] || 1;
+                                    let sak = isRontokan ? 0 : Math.floor(total / cnt);
+                                    sakUsed[slot] += sak;
+                                    if (sakUsed[slot] > total) { sak -= (sakUsed[slot] - total); sakUsed[slot] = total; }
+                                    rowObj[slot] = { kg: val, sak: sak };
                                     hasData = true;
                                 }
                             }
