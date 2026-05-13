@@ -1123,7 +1123,8 @@
                         <i class="ti ti-map-pin"></i> Kalipucang, Jepara
                     </div>
                     <div class="wdiv"></div>
-                    <div class="wstats" id="ws-container-Kalipucang" style="display: flex; gap: 15px; flex-wrap: nowrap;">
+                    <div class="wstats" id="ws-container-Kalipucang"
+                        style="display: flex; gap: 15px; flex-wrap: nowrap;">
                     </div>
                 </div>
                 <div class="wcard troso" id="wc-Troso" onclick="pilihGudang('Troso')">
@@ -1171,9 +1172,11 @@
                     <input type="text" id="search-input" placeholder="Cari kode, supplier, plat..."
                         oninput="renderTable()" />
                 </div>
-                <div class="search-wrap" style="width: auto; min-width: 140px; background: transparent; border-color: #c2e2ce;">
+                <div class="search-wrap"
+                    style="width: auto; min-width: 140px; background: transparent; border-color: #c2e2ce;">
                     <i class="ti ti-filter" style="color: #a0a09c;"></i>
-                    <select class="filter-sel" id="filter-kat" onchange="renderTable()" style="border: none; padding-left: 36px; height: 100%; width: 100%; background: transparent; outline: none; -webkit-appearance: none; appearance: none;">
+                    <select class="filter-sel" id="filter-kat" onchange="renderTable()"
+                        style="border: none; padding-left: 36px; height: 100%; width: 100%; background: transparent; outline: none; -webkit-appearance: none; appearance: none;">
                         <option value="">Kategori</option>
                         <option>Z/C+</option>
                         <option>Z/C-</option>
@@ -1181,13 +1184,16 @@
                     </select>
                 </div>
                 <div style="display: flex; gap: 8px; margin-left: auto;">
-                    <button class="btn-sm" onclick="bukaModal()" style="background-color: #0d9463; color: white; border: none; font-weight: 500;">
+                    <button class="btn-sm" onclick="bukaModal()"
+                        style="background-color: #0d9463; color: white; border: none; font-weight: 500;">
                         <i class="ti ti-plus"></i> Tambah
                     </button>
-                    <button class="btn-sm btn-outline" onclick="bukaModalExport()" style="color: #0d9463; border-color: #c2e2ce; background: transparent; font-weight: 500;">
+                    <button class="btn-sm btn-outline" onclick="bukaModalExport()"
+                        style="color: #0d9463; border-color: #c2e2ce; background: transparent; font-weight: 500;">
                         <i class="ti ti-download"></i> Export
                     </button>
-                    <button class="btn-sm btn-outline" onclick="bukaModalImport()" style="color: #e07a2a; border-color: #f7b781; background: transparent; font-weight: 500;">
+                    <button class="btn-sm btn-outline" onclick="bukaModalImport()"
+                        style="color: #e07a2a; border-color: #f7b781; background: transparent; font-weight: 500;">
                         <i class="ti ti-upload"></i> Import
                     </button>
                 </div>
@@ -1317,7 +1323,7 @@
                         <div class="form-group">
                             <label class="form-label">Jumlah Surat Jalan (Kg)</label>
                             <input type="text" inputmode="decimal" class="form-input" id="f-jum-sj"
-                                oninput="hitungSelisih()" placeholder="Contoh: 25090,5" />
+                                oninput="hitungSelisih()" placeholder="Contoh: 25.090,5" />
                         </div>
                         <div class="form-group" style="margin-bottom: 0;">
                             <label class="form-label">Selisih Bongkaran (Kg)</label>
@@ -1333,7 +1339,8 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label">Jumlah Sak Surat Jalan</label>
-                            <input type="text" inputmode="numeric" class="form-input" id="f-sak-sj" oninput="hitungSelisih()" />
+                            <input type="text" inputmode="numeric" class="form-input" id="f-sak-sj"
+                                oninput="hitungSelisih()" placeholder="Contoh: 645" />
                         </div>
                         <div class="form-group" style="margin-bottom: 0;">
                             <label class="form-label">Selisih Sak</label>
@@ -1367,7 +1374,9 @@
 
                 <div class="form-group" style="margin-top: 1.25rem; margin-bottom: 0;">
                     <label class="form-label">Note / Catatan Penting</label>
-                    <textarea id="f-catatan" class="form-input" rows="2" placeholder="Masukkan catatan penting jika ada..." style="resize: vertical; min-height: 60px; font-family: inherit;"></textarea>
+                    <textarea id="f-catatan" class="form-input" rows="2"
+                        placeholder="Masukkan catatan penting jika ada..."
+                        style="resize: vertical; min-height: 60px; font-family: inherit;"></textarea>
                 </div>
 
                 <div class="form-actions">
@@ -1388,18 +1397,22 @@
                 <button class="modal-close" onclick="tutupModalImport()"><i class="ti ti-x"></i></button>
             </div>
             <div>
-                <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 12px; line-height: 1.6;">
+                <div
+                    style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 12px; line-height: 1.6;">
                     <strong>Instruksi:</strong><br>
-                    1. File Excel (.xlsx) dengan kolom: Nama, Kategori, Stok, Supplier, Tanggal, SJ_Kg, SJ_Sak, ECMU/SPNU, Petugas, QC, Plat, No Timbangan, Catatan.<br>
+                    1. File Excel (.xlsx) dengan kolom: Nama, Kategori, Stok, Supplier, Tanggal, SJ_Kg, SJ_Sak,
+                    ECMU/SPNU, Petugas, QC, Plat, No Timbangan, Catatan.<br>
                     2. Header di baris pertama akan dilewati.
                 </div>
                 <div class="form-group">
                     <label class="form-label">Pilih File Excel</label>
-                    <input type="file" id="f-import-file" accept=".xlsx, .xls" class="form-input" style="padding: 10px;" />
+                    <input type="file" id="f-import-file" accept=".xlsx, .xls" class="form-input"
+                        style="padding: 10px;" />
                 </div>
             </div>
             <div class="form-actions">
-                <button type="button" class="btn-sm btn-outline" onclick="unduhTemplate()" style="flex: none; background: var(--info-bg); color: var(--info-text); border: 0.5px solid var(--info-border);">
+                <button type="button" class="btn-sm btn-outline" onclick="unduhTemplate()"
+                    style="flex: none; background: var(--info-bg); color: var(--info-text); border: 0.5px solid var(--info-border);">
                     <i class="ti ti-download"></i> Template
                 </button>
                 <button type="button" class="btn-sm btn-outline" onclick="tutupModalImport()">Batal</button>
@@ -1418,27 +1431,36 @@
                 <button class="modal-close" onclick="tutupModalExport()"><i class="ti ti-x"></i></button>
             </div>
             <div style="margin-bottom: 1.25rem;">
-                <p style="font-size: 13px; color: var(--text2); margin-bottom: 1rem;">Pilih data yang ingin diekspor untuk gudang <strong id="export-gudang-lbl"></strong>:</p>
+                <p style="font-size: 13px; color: var(--text2); margin-bottom: 1rem;">Pilih data yang ingin diekspor
+                    untuk gudang <strong id="export-gudang-lbl"></strong>:</p>
                 <div style="display: flex; flex-direction: column; gap: 10px;">
-                    <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; padding: 12px; border: 0.5px solid var(--border); border-radius: var(--radius); transition: background 0.15s;">
-                        <input type="radio" name="export-opt" value="semua" id="opt-semua" checked style="margin-top: 2px; accent-color: #0d9463;">
+                    <label
+                        style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; padding: 12px; border: 0.5px solid var(--border); border-radius: var(--radius); transition: background 0.15s;">
+                        <input type="radio" name="export-opt" value="semua" id="opt-semua" checked
+                            style="margin-top: 2px; accent-color: #0d9463;">
                         <div>
                             <div style="font-size: 13px; font-weight: 600;">Semua Data</div>
-                            <div style="font-size: 12px; color: var(--text2);" id="opt-semua-lbl">Ekspor seluruh data gudang</div>
+                            <div style="font-size: 12px; color: var(--text2);" id="opt-semua-lbl">Ekspor seluruh data
+                                gudang</div>
                         </div>
                     </label>
-                    <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; padding: 12px; border: 0.5px solid var(--border); border-radius: var(--radius); transition: background 0.15s;">
-                        <input type="radio" name="export-opt" value="filter" id="opt-filter" style="margin-top: 2px; accent-color: #0d9463;">
+                    <label
+                        style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; padding: 12px; border: 0.5px solid var(--border); border-radius: var(--radius); transition: background 0.15s;">
+                        <input type="radio" name="export-opt" value="filter" id="opt-filter"
+                            style="margin-top: 2px; accent-color: #0d9463;">
                         <div>
                             <div style="font-size: 13px; font-weight: 600;">Sesuai Filter Aktif</div>
-                            <div style="font-size: 12px; color: var(--text2);" id="opt-filter-lbl">Ekspor hasil pencarian/filter saat ini</div>
+                            <div style="font-size: 12px; color: var(--text2);" id="opt-filter-lbl">Ekspor hasil
+                                pencarian/filter saat ini</div>
                         </div>
                     </label>
                 </div>
             </div>
             <div style="display: flex; gap: 10px;">
-                <button class="btn-sm btn-outline" onclick="tutupModalExport()" style="flex: 1; justify-content: center;">Batal</button>
-                <button class="btn-sm" onclick="eksporData()" id="btn-proses-export" style="flex: 1; justify-content: center; background: #0d9463;">
+                <button class="btn-sm btn-outline" onclick="tutupModalExport()"
+                    style="flex: 1; justify-content: center;">Batal</button>
+                <button class="btn-sm" onclick="eksporData()" id="btn-proses-export"
+                    style="flex: 1; justify-content: center; background: #0d9463;">
                     <i class="ti ti-file-spreadsheet"></i> Download Excel
                 </button>
             </div>
@@ -1458,6 +1480,37 @@
         let dataBahan = [];
         let page = 1;
         const PER_PAGE = 10;
+
+        // ===== FORMAT ANGKA INDONESIA =====
+        // Titik = pemisah ribuan, Koma = pemisah desimal
+        // Contoh: 25090.5 → "25.090,5" | 1000 → "1.000,0" | 640 → "640"
+
+        function formatLokal(num) {
+            // Untuk angka desimal (Kg), selalu tampilkan minimal 1 desimal
+            const n = parseFloat(num);
+            if (isNaN(n)) return "0,0";
+            return new Intl.NumberFormat('id-ID', {
+                minimumFractionDigits: 1,
+                maximumFractionDigits: 1
+            }).format(n);
+        }
+
+        function formatLokalInt(num) {
+            // Untuk bilangan bulat (sak, jumlah), tanpa desimal
+            const n = Math.round(parseFloat(num) || 0);
+            return new Intl.NumberFormat('id-ID', {
+                maximumFractionDigits: 0
+            }).format(n);
+        }
+
+        function parseLokal(val) {
+            // Parsing input format Indonesia ke number
+            // "25.090,5" → 25090.5 | "1.000" → 1000 | "640" → 640
+            if (!val && val !== 0) return 0;
+            let s = val.toString().replace(/[^0-9,\.-]/g, "");
+            s = s.replace(/\./g, "").replace(/,/g, ".");
+            return parseFloat(s) || 0;
+        }
 
         // ===== INIT =====
         window.addEventListener("DOMContentLoaded", () => {
@@ -1496,7 +1549,7 @@
                         if (summary[reg]) {
                             html += `
                                 <div>
-                                    <div class="wstat-val" style="font-size: 14px;">${summary[reg]}</div>
+                                    <div class="wstat-val" style="font-size: 14px;">${formatLokalInt(summary[reg])}</div>
                                     <div class="wstat-lbl">${reg}</div>
                                 </div>
                             `;
@@ -1585,14 +1638,14 @@
         // ===== LOAD DATA =====
         async function muatData() {
             const tbody = document.getElementById("tbl-body");
-            tbody.innerHTML = `<tr><td colspan="6"><div class="loading"><i class="ti ti-loader"></i>Memuat data...</div></td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="10"><div class="loading"><i class="ti ti-loader"></i>Memuat data...</div></td></tr>`;
             try {
                 dataBahan = await apiFetch("GET", gudangAktif);
                 dataBahan.reverse();
                 updateStats();
                 renderTable();
             } catch (e) {
-                tbody.innerHTML = `<tr><td colspan="6"><div class="empty"><i class="ti ti-wifi-off"></i>${e.message.includes("SCRIPT_URL") ? "SCRIPT_URL belum diisi. Lihat panduan setup." : "Gagal memuat data: " + e.message}</div></td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="10"><div class="empty"><i class="ti ti-wifi-off"></i>${e.message.includes("SCRIPT_URL") ? "SCRIPT_URL belum diisi. Lihat panduan setup." : "Gagal memuat data: " + e.message}</div></td></tr>`;
             }
         }
 
@@ -1614,7 +1667,7 @@
             let html = `
                 <div class="scard" style="border-left: 4px solid var(--text2); background: var(--bg);">
                     <div class="scard-lbl">Total Bongkaran</div>
-                    <div class="scard-val">${dataBahan.length}</div>
+                    <div class="scard-val">${formatLokalInt(dataBahan.length)}</div>
                 </div>
             `;
 
@@ -1695,6 +1748,21 @@
             renderPage();
         }
 
+        function hitungSakFromScaling(d) {
+            let totalSakRiil = 0;
+            try {
+                const sData = JSON.parse(d.scalingData || "[]");
+                sData.forEach(row => {
+                    if (row) {
+                        Object.keys(row).forEach(colIdx => {
+                            totalSakRiil += parseInt(row[colIdx].sak) || 0;
+                        });
+                    }
+                });
+            } catch (e) { }
+            return totalSakRiil;
+        }
+
         function renderPage() {
             const rows = getFiltered();
             const total = rows.length;
@@ -1708,6 +1776,7 @@
             } else {
                 tbody.innerHTML = slice
                     .map((d) => {
+                        const totalSakRiil = hitungSakFromScaling(d);
                         return `<tr>
         <td style="color: #0d9463; font-weight: 500;">${esc(d.id)}</td>
         <td>${esc(formatTanggal(d.tanggal))}</td>
@@ -1715,21 +1784,8 @@
         <td><span style="border: 1px solid var(--border2); padding: 2px 8px; border-radius: 4px; font-size: 11px; white-space: nowrap;">${esc(d.plat || "-")}</span></td>
         <td><span style="background: #f1f5f9; border: 0.5px solid #cbd5e1; padding: 2px 8px; border-radius: 4px; font-size: 11px; white-space: nowrap;">${esc(d.notimbang || "-")}</span></td>
         <td><span style="background: #eaf3de; color: #3b6d11; padding: 2px 8px; border-radius: 12px; font-weight: 500; font-size: 11px;">${esc(d.kat || "-")}</span></td>
-        <td>${d.stok ? formatLokal(d.stok) : "0"}</td>
-        <td>${(() => {
-            let totalSakRiil = 0;
-            try {
-                const sData = JSON.parse(d.scalingData || "[]");
-                sData.forEach(row => {
-                    if (row) {
-                        Object.keys(row).forEach(colIdx => {
-                            totalSakRiil += parseInt(row[colIdx].sak) || 0;
-                        });
-                    }
-                });
-            } catch(e) {}
-            return totalSakRiil || "-";
-        })()}</td>
+        <td style="text-align: right; font-weight: 600;">${d.stok ? formatLokal(d.stok) : "0,0"}</td>
+        <td style="text-align: center;">${totalSakRiil ? formatLokalInt(totalSakRiil) : "-"}</td>
         <td>${esc(d.petugas || "-")}</td>
         <td>
             <div class="act-wrap">
@@ -1746,7 +1802,7 @@
             document.getElementById("pgn-info").textContent =
                 total === 0
                     ? "Tidak ada data"
-                    : `Menampilkan ${start + 1}–${end} dari ${total} bahan`;
+                    : `Menampilkan ${start + 1}–${end} dari ${formatLokalInt(total)} bahan`;
 
             const totalPages = Math.ceil(total / PER_PAGE);
             const pgn = document.getElementById("pgn-btns");
@@ -1767,20 +1823,8 @@
 
         // ===== MODAL & SCALLING =====
 
-        // Fungsi helper untuk parsing angka (koma jadi titik)
-        function parseLokal(val) {
-            if (!val) return 0;
-            let s = val.toString().replace(/[^0-9,\.-]/g, "");
-            s = s.replace(/\./g, "").replace(/,/g, ".");
-            return parseFloat(s) || 0;
-        }
-
-        // Fungsi helper untuk format angka (titik ribuan, koma desimal)
-        function formatLokal(num) {
-            return new Intl.NumberFormat('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(num);
-        }
-
         let rawTotalKg = 0;
+        let rawTotalSak = 0;
 
         function initScallingTable() {
             const tbody = document.getElementById("scalling-body");
@@ -1790,9 +1834,9 @@
                 for (let c = 1; c <= 9; c++) {
                     html += `<td>
                         <div class="cell-wrap">
-                            <input type="text" inputmode="decimal" class="sc-input-kg" data-col="${c}" oninput="hitungScalling()" placeholder="-" title="Berat (Kg)">
+                            <input type="text" inputmode="decimal" class="sc-input-kg" data-col="${c}" oninput="hitungScalling()" onblur="formatInputKg(this)" placeholder="-" title="Berat (Kg)">
                             <span class="sep">/</span>
-                            <input type="text" inputmode="numeric" class="sc-input-sak" data-col="${c}" oninput="hitungScalling()" placeholder="-" title="Jumlah Sak">
+                            <input type="text" inputmode="numeric" class="sc-input-sak" data-col="${c}" oninput="hitungScalling()" onblur="formatInputSak(this)" placeholder="-" title="Jumlah Sak">
                         </div>
                     </td>`;
                 }
@@ -1800,6 +1844,25 @@
             }
             tbody.innerHTML = html;
             document.getElementById("f-tanggal").valueAsDate = new Date();
+        }
+
+        // Auto-format saat input kehilangan fokus
+        function formatInputKg(inp) {
+            const val = parseLokal(inp.value);
+            if (val > 0) {
+                inp.value = formatLokal(val);
+            } else if (inp.value !== "") {
+                inp.value = "";
+            }
+        }
+
+        function formatInputSak(inp) {
+            const val = parseInt(inp.value.replace(/\./g, "")) || 0;
+            if (val > 0) {
+                inp.value = formatLokalInt(val);
+            } else if (inp.value !== "") {
+                inp.value = "";
+            }
         }
 
         function hitungScalling() {
@@ -1816,43 +1879,42 @@
                         colSum += val;
                         const wrap = kgInp.parentElement;
                         const sakInp = wrap.querySelector('.sc-input-sak');
-                        const sak = parseInt(sakInp.value) || 0;
+                        const sak = parseInt(sakInp.value.replace(/\./g, "")) || 0;
                         colSak += sak;
                     }
                 });
                 document.getElementById(`jml-${c}`).textContent = colSum > 0 ? formatLokal(colSum) : "0";
-                document.getElementById(`sak-${c}`).textContent = colSak;
+                document.getElementById(`sak-${c}`).textContent = colSak > 0 ? formatLokalInt(colSak) : "0";
                 grandTotal += colSum;
                 grandSak += colSak;
             }
 
             rawTotalKg = grandTotal;
-            document.getElementById("f-jum-total").value = formatLokal(grandTotal);
-            document.getElementById("f-sak-total").value = grandSak;
+            rawTotalSak = grandSak;
+            document.getElementById("f-jum-total").value = grandTotal > 0 ? formatLokal(grandTotal) : "";
+            document.getElementById("f-sak-total").value = grandSak > 0 ? formatLokalInt(grandSak) : "";
             hitungSelisih();
         }
 
-        // ===== BUG FIX: hitungSelisih yang benar =====
-        // Sebelumnya ada blok kode orphan di luar fungsi yang menyebabkan
-        // SyntaxError dan ReferenceError, serta logika yang menghitung
-        // selisih meskipun field SJ masih kosong.
         function hitungSelisih() {
             const total = rawTotalKg;
             const sjInputRaw = document.getElementById("f-jum-sj").value;
             const sj = parseLokal(sjInputRaw);
 
-            if (sjInputRaw !== "") {
-                document.getElementById("f-selisih-bongkaran").value = formatLokal(total - sj);
+            if (sjInputRaw !== "" && sjInputRaw.trim() !== "") {
+                const selisih = total - sj;
+                document.getElementById("f-selisih-bongkaran").value = formatLokal(selisih);
             } else {
                 document.getElementById("f-selisih-bongkaran").value = "";
             }
 
-            const sakTotal = parseInt(document.getElementById("f-sak-total").value) || 0;
+            const sakTotal = rawTotalSak;
             const sjSakRaw = document.getElementById("f-sak-sj").value;
-            const sakSj = parseInt(sjSakRaw) || 0;
+            const sakSj = parseLokal(sjSakRaw);
 
-            if (sjSakRaw !== "") {
-                document.getElementById("f-selisih-sak").value = sakTotal - sakSj;
+            if (sjSakRaw !== "" && sjSakRaw.trim() !== "") {
+                const selisihSak = sakTotal - sakSj;
+                document.getElementById("f-selisih-sak").value = formatLokalInt(selisihSak);
             } else {
                 document.getElementById("f-selisih-sak").value = "";
             }
@@ -1899,7 +1961,7 @@
                 }
 
                 document.getElementById("f-jum-sj").value = (bahan.sj_kg !== undefined && bahan.sj_kg !== "") ? formatLokal(bahan.sj_kg) : "";
-                document.getElementById("f-sak-sj").value = (bahan.sj_sak !== undefined && bahan.sj_sak !== "") ? bahan.sj_sak : "";
+                document.getElementById("f-sak-sj").value = (bahan.sj_sak !== undefined && bahan.sj_sak !== "") ? formatLokalInt(bahan.sj_sak) : "";
                 document.getElementById("f-ecmu").value = bahan.ecmu || "";
                 document.getElementById("f-petugas").value = bahan.petugas || "";
                 document.getElementById("f-qc").value = bahan.qc || "";
@@ -1908,7 +1970,10 @@
 
                 rawTotalKg = parseFloat(bahan.stok) || 0;
                 document.getElementById("f-jum-total").value = rawTotalKg > 0 ? formatLokal(rawTotalKg) : "";
-                document.getElementById("f-sak-total").value = "";
+
+                // Hitung sak total dari scalingData
+                rawTotalSak = hitungSakFromScaling(bahan);
+                document.getElementById("f-sak-total").value = rawTotalSak > 0 ? formatLokalInt(rawTotalSak) : "";
 
                 if (bahan.scalingData) {
                     try {
@@ -1920,8 +1985,14 @@
                                 Object.keys(rowData).forEach(col => {
                                     const kgInp = tr.querySelector(`.sc-input-kg[data-col="${col}"]`);
                                     const sakInp = tr.querySelector(`.sc-input-sak[data-col="${col}"]`);
-                                    if (kgInp) kgInp.value = rowData[col].kg || "";
-                                    if (sakInp) sakInp.value = rowData[col].sak || "";
+                                    if (kgInp) {
+                                        const kgVal = parseFloat(rowData[col].kg) || 0;
+                                        kgInp.value = kgVal > 0 ? formatLokal(kgVal) : "";
+                                    }
+                                    if (sakInp) {
+                                        const sakVal = parseInt(rowData[col].sak) || 0;
+                                        sakInp.value = sakVal > 0 ? formatLokalInt(sakVal) : "";
+                                    }
                                 });
                             }
                         });
@@ -1947,6 +2018,9 @@
                 document.getElementById("f-qc").value = "";
                 document.getElementById("f-notimbang").value = "";
                 document.getElementById("f-plat").value = "";
+
+                rawTotalKg = 0;
+                rawTotalSak = 0;
 
                 hitungScalling();
             }
@@ -2025,10 +2099,13 @@
                 const wraps = tr.querySelectorAll('.cell-wrap');
                 wraps.forEach((wrap, idx) => {
                     const col = idx + 1;
-                    const kg = wrap.querySelector('.sc-input-kg').value;
-                    const sak = wrap.querySelector('.sc-input-sak').value;
-                    if (kg !== "" || sak !== "") {
-                        rowObj[col] = { kg, sak };
+                    const kgRaw = wrap.querySelector('.sc-input-kg').value;
+                    const sakRaw = wrap.querySelector('.sc-input-sak').value;
+                    // Simpan nilai mentah (number), bukan format tampilan
+                    const kgNum = parseLokal(kgRaw);
+                    const sakNum = parseInt(sakRaw.replace(/\./g, "")) || 0;
+                    if (kgNum > 0 || sakNum > 0) {
+                        rowObj[col] = { kg: kgNum > 0 ? String(kgNum) : "", sak: sakNum > 0 ? String(sakNum) : "" };
                         hasData = true;
                     }
                 });
@@ -2046,7 +2123,7 @@
                 sat: "Kg",
                 tanggal: document.getElementById("f-tanggal").value,
                 sj_kg: parseLokal(document.getElementById("f-jum-sj").value),
-                sj_sak: parseInt(document.getElementById("f-sak-sj").value) || 0,
+                sj_sak: parseLokal(document.getElementById("f-sak-sj").value),
                 ecmu: document.getElementById("f-ecmu").value,
                 petugas: document.getElementById("f-petugas").value,
                 qc: document.getElementById("f-qc").value,
@@ -2240,7 +2317,7 @@
                                     let sak = isRontokan ? 0 : Math.floor(total / cnt);
                                     sakUsed[slot] += sak;
                                     if (sakUsed[slot] > total) { sak -= (sakUsed[slot] - total); sakUsed[slot] = total; }
-                                    rowObj[slot] = { kg: val, sak: sak };
+                                    rowObj[slot] = { kg: String(val), sak: String(sak) };
                                     hasData = true;
                                 }
                             }
@@ -2303,8 +2380,8 @@
             data.push(["Jumlah Surat Jalan", "", "", ":", 33500, "Kg"]);
             data.push(["Jumlah Sak Surat Jalan", "", "", ":", 645, "Sak"]);
             data.push([]);
-            data.push(["Selisih Bongkaran", "", "", ":", 64, "Kg"]);
-            data.push(["Selisih Sak", "", "", ":", 5, "Sak"]);
+            data.push(["Selisih Bongkaran", "", "", ":", -64, "Kg"]);
+            data.push(["Selisih Sak", "", "", ":", -5, "Sak"]);
             data.push(["SPNU", "", "", ":", "0"]);
             data.push([]);
             data.push(["Petugas Timbang", "", "", ":", "Bagus"]);
@@ -2322,8 +2399,8 @@
             const all = dataBahan.length;
             const filtered = getFiltered().length;
             document.getElementById("export-gudang-lbl").textContent = gudangAktif;
-            document.getElementById("opt-semua-lbl").textContent = `${all} data tersedia`;
-            document.getElementById("opt-filter-lbl").textContent = `${filtered} data sesuai filter`;
+            document.getElementById("opt-semua-lbl").textContent = `${formatLokalInt(all)} data tersedia`;
+            document.getElementById("opt-filter-lbl").textContent = `${formatLokalInt(filtered)} data sesuai filter`;
             document.getElementById("opt-semua").checked = true;
             document.getElementById("modal-export-overlay").classList.add("open");
         }
@@ -2343,14 +2420,7 @@
 
             try {
                 function hitungTotalSak(d) {
-                    let tot = 0;
-                    try {
-                        const sd = JSON.parse(d.scalingData || "[]");
-                        sd.forEach(row => {
-                            if (row) Object.values(row).forEach(cell => { tot += parseInt(cell.sak) || 0; });
-                        });
-                    } catch (e) {}
-                    return tot;
+                    return hitungSakFromScaling(d);
                 }
 
                 const header = [
@@ -2419,7 +2489,7 @@
                 const suffix = useFilter ? "_Filter" : "_Semua";
                 XLSX.writeFile(wb, `StokBahan_${gudangAktif}${suffix}_${tglFile}.xlsx`);
 
-                showToast(`${source.length} data berhasil diekspor`);
+                showToast(`${formatLokalInt(source.length)} data berhasil diekspor`);
                 tutupModalExport();
             } catch (err) {
                 showToast("Gagal ekspor: " + err.message, true);
