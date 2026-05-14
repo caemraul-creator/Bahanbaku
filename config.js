@@ -4,5 +4,5 @@
 // =====================================================
 
 const CONFIG = {
-    SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyQw_REdtrBJvQSItskyaEfhx5ADbw7yAdEf_o2WJ0r1LSO6qT8PsuJh9dwgqjVr8lQ/exec',
+    SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwsq2gRvcbwGFdM0eq7Wr6u_25VIwkFdpKzeMuJJDK-EG656pYYwQWSZw38IZUAOLAG/exec',
 }

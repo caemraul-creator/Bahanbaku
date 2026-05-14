@@ -878,6 +878,12 @@
             gap: 12px;
         }
 
+        .form-row-5 {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+        }
+
         .form-actions {
             display: flex;
             gap: 10px;
@@ -960,6 +966,10 @@
             }
 
             .form-row-4 {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .form-row-5 {
                 grid-template-columns: 1fr 1fr;
             }
 
@@ -1177,10 +1187,7 @@
                     <i class="ti ti-filter" style="color: #a0a09c;"></i>
                     <select class="filter-sel" id="filter-kat" onchange="renderTable()"
                         style="border: none; padding-left: 36px; height: 100%; width: 100%; background: transparent; outline: none; -webkit-appearance: none; appearance: none;">
-                        <option value="">Kategori</option>
-                        <option>Z/C+</option>
-                        <option>Z/C-</option>
-                        <option>Z/D</option>
+                        <option value="">Semua Kategori</option>
                     </select>
                 </div>
                 <div style="display: flex; gap: 8px; margin-left: auto;">
@@ -1349,10 +1356,10 @@
                     </div>
                 </div>
 
-                <div class="form-row form-row-4" style="margin-top: 1.25rem;">
+                <div class="form-row form-row-5" style="margin-top: 1.25rem;">
                     <div class="form-group" style="margin-bottom: 0;">
-                        <label class="form-label">ECMU/SPNU</label>
-                        <input class="form-input" id="f-ecmu" />
+                        <label class="form-label">No. Kontainer</label>
+                        <input class="form-input" id="f-nokontainer" placeholder="Contoh: MSKU-123456-7" />
                     </div>
                     <div class="form-group" style="margin-bottom: 0;">
                         <label class="form-label">Petugas Timbang</label>
@@ -1401,7 +1408,7 @@
                     style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 12px; line-height: 1.6;">
                     <strong>Instruksi:</strong><br>
                     1. File Excel (.xlsx) dengan kolom: Nama, Kategori, Stok, Supplier, Tanggal, SJ_Kg, SJ_Sak,
-                    ECMU/SPNU, Petugas, QC, Plat, No Timbangan, Catatan.<br>
+                    No. Kontainer, Petugas, QC, Plat, No Timbangan, Catatan.<br>
                     2. Header di baris pertama akan dilewati.
                 </div>
                 <div class="form-group">
@@ -1482,11 +1489,7 @@
         const PER_PAGE = 10;
 
         // ===== FORMAT ANGKA INDONESIA =====
-        // Titik = pemisah ribuan, Koma = pemisah desimal
-        // Contoh: 25090.5 → "25.090,5" | 1000 → "1.000,0" | 640 → "640"
-
         function formatLokal(num) {
-            // Untuk angka desimal (Kg), selalu tampilkan minimal 1 desimal
             const n = parseFloat(num);
             if (isNaN(n)) return "0,0";
             return new Intl.NumberFormat('id-ID', {
@@ -1496,7 +1499,6 @@
         }
 
         function formatLokalInt(num) {
-            // Untuk bilangan bulat (sak, jumlah), tanpa desimal
             const n = Math.round(parseFloat(num) || 0);
             return new Intl.NumberFormat('id-ID', {
                 maximumFractionDigits: 0
@@ -1504,12 +1506,42 @@
         }
 
         function parseLokal(val) {
-            // Parsing input format Indonesia ke number
-            // "25.090,5" → 25090.5 | "1.000" → 1000 | "640" → 640
             if (!val && val !== 0) return 0;
             let s = val.toString().replace(/[^0-9,\.-]/g, "");
             s = s.replace(/\./g, "").replace(/,/g, ".");
             return parseFloat(s) || 0;
+        }
+
+        // ===== FIX TIMEZONE: Parse "YYYY-MM-DD" sebagai tanggal LOCAL (bukan UTC) =====
+        // new Date("2026-05-12") → di-parse sebagai UTC midnight → di timezone tertentu
+        // .getDate() bisa return 11 (minus 1 hari). Helper ini menghindari masalah tersebut.
+        function localDate(str) {
+            if (!str) return new Date();
+            // Jika ada info waktu/timezone (misal "2026-04-27T17:00:00.000Z"),
+            // parse sebagai Date lalu ambil tanggal LOKAL — karena:
+            //   2026-04-27T17:00:00Z = 28 April 00:00 di Jakarta (UTC+7)
+            // Jika langsung potong string jadi "2026-04-27", tanggalnya salah.
+            if (/T\d{2}:\d{2}/.test(str)) {
+                const d = new Date(str);
+                if (!isNaN(d.getTime())) {
+                    // Ambil komponen tanggal lokal, buat Date local midnight
+                    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+                }
+            }
+            // Format YYYY-MM-DD tanpa waktu: parse manual sebagai local midnight
+            // (new Date("2026-04-28") di-parse sebagai UTC midnight,
+            //  bisa bergeser di timezone behind UTC)
+            const cleaned = String(str).replace(/T.*/, "").trim();
+            const p = cleaned.split("-");
+            if (p.length === 3 && p[0].length === 4) {
+                return new Date(+p[0], +p[1] - 1, +p[2]);
+            }
+            // Fallback: coba parse DD/MM/YYYY
+            const p2 = String(str).split("/");
+            if (p2.length === 3) {
+                return new Date(+p2[2], +p2[1] - 1, +p2[0]);
+            }
+            return new Date(str);
         }
 
         // ===== INIT =====
@@ -1641,12 +1673,39 @@
             tbody.innerHTML = `<tr><td colspan="10"><div class="loading"><i class="ti ti-loader"></i>Memuat data...</div></td></tr>`;
             try {
                 dataBahan = await apiFetch("GET", gudangAktif);
-                dataBahan.reverse();
+                // Sortir berdasarkan tanggal terbaru di atas
+                dataBahan.sort((a, b) => {
+                    const da = localDate(a.tanggal);
+                    const db = localDate(b.tanggal);
+                    // Tanggal terbaru di atas; jika sama, bandingkan ID
+                    if (db.getTime() !== da.getTime()) return db.getTime() - da.getTime();
+                    return (b.id || "").localeCompare(a.id || "");
+                });
+                updateFilterKategori();
                 updateStats();
                 renderTable();
             } catch (e) {
                 tbody.innerHTML = `<tr><td colspan="10"><div class="empty"><i class="ti ti-wifi-off"></i>${e.message.includes("SCRIPT_URL") ? "SCRIPT_URL belum diisi. Lihat panduan setup." : "Gagal memuat data: " + e.message}</div></td></tr>`;
             }
+        }
+
+        // ===== UPDATE FILTER KATEGORI DARI DATA =====
+        function updateFilterKategori() {
+            const sel = document.getElementById("filter-kat");
+            const currentVal = sel.value;
+            // Kumpulkan kategori unik dari data
+            const kats = [...new Set(dataBahan.map(d => d.kat).filter(Boolean))];
+            kats.sort();
+            // Rebuild options
+            sel.innerHTML = '<option value="">Semua Kategori</option>';
+            kats.forEach(k => {
+                const opt = document.createElement("option");
+                opt.value = k;
+                opt.textContent = k;
+                sel.appendChild(opt);
+            });
+            // Restore selection jika masih valid
+            if (kats.includes(currentVal)) sel.value = currentVal;
         }
 
         // ===== STATS =====
@@ -1717,9 +1776,10 @@
             });
         }
 
+        // FIX: gunakan localDate() agar tidak terkena timezone shift
         function formatTanggal(str) {
             if (!str) return "-";
-            const d = new Date(str);
+            const d = localDate(str);
             if (isNaN(d.getTime())) return str;
             const yyyy = d.getFullYear();
             const mm = String(d.getMonth() + 1).padStart(2, '0');
@@ -1846,7 +1906,6 @@
             document.getElementById("f-tanggal").valueAsDate = new Date();
         }
 
-        // Auto-format saat input kehilangan fokus
         function formatInputKg(inp) {
             const val = parseLokal(inp.value);
             if (val > 0) {
@@ -1939,8 +1998,9 @@
                 document.getElementById("f-kat").value = bahan.kat || "";
                 document.getElementById("f-catatan").value = bahan.catatan || "";
 
+                // FIX: gunakan localDate() untuk menghindari timezone shift
                 if (bahan.tanggal) {
-                    const d = new Date(bahan.tanggal);
+                    const d = localDate(bahan.tanggal);
                     if (!isNaN(d.getTime())) {
                         const yyyy = d.getFullYear();
                         const mm = String(d.getMonth() + 1).padStart(2, '0');
@@ -1962,7 +2022,7 @@
 
                 document.getElementById("f-jum-sj").value = (bahan.sj_kg !== undefined && bahan.sj_kg !== "") ? formatLokal(bahan.sj_kg) : "";
                 document.getElementById("f-sak-sj").value = (bahan.sj_sak !== undefined && bahan.sj_sak !== "") ? formatLokalInt(bahan.sj_sak) : "";
-                document.getElementById("f-ecmu").value = bahan.ecmu || "";
+                document.getElementById("f-nokontainer").value = bahan.nokontainer || "";
                 document.getElementById("f-petugas").value = bahan.petugas || "";
                 document.getElementById("f-qc").value = bahan.qc || "";
                 document.getElementById("f-notimbang").value = bahan.notimbang || "";
@@ -1971,7 +2031,6 @@
                 rawTotalKg = parseFloat(bahan.stok) || 0;
                 document.getElementById("f-jum-total").value = rawTotalKg > 0 ? formatLokal(rawTotalKg) : "";
 
-                // Hitung sak total dari scalingData
                 rawTotalSak = hitungSakFromScaling(bahan);
                 document.getElementById("f-sak-total").value = rawTotalSak > 0 ? formatLokalInt(rawTotalSak) : "";
 
@@ -2013,7 +2072,7 @@
 
                 document.getElementById("f-jum-sj").value = "";
                 document.getElementById("f-sak-sj").value = "";
-                document.getElementById("f-ecmu").value = "";
+                document.getElementById("f-nokontainer").value = "";
                 document.getElementById("f-petugas").value = "";
                 document.getElementById("f-qc").value = "";
                 document.getElementById("f-notimbang").value = "";
@@ -2045,6 +2104,7 @@
             editBahan(id);
         }
 
+        // FIX: gunakan localDate() agar ID tidak terkena timezone shift
         function generateOtomatisId(nama, tanggalStr) {
             let prefix = "LK";
             const n = nama.toLowerCase();
@@ -2057,7 +2117,7 @@
             else if (n.includes("residu")) prefix = "RD";
             else if (n.includes("lokal")) prefix = "LK";
 
-            const d = tanggalStr ? new Date(tanggalStr) : new Date();
+            const d = localDate(tanggalStr);
             const yyyy = d.getFullYear();
             const mm = String(d.getMonth() + 1).padStart(2, '0');
             const dd = String(d.getDate()).padStart(2, '0');
@@ -2101,7 +2161,6 @@
                     const col = idx + 1;
                     const kgRaw = wrap.querySelector('.sc-input-kg').value;
                     const sakRaw = wrap.querySelector('.sc-input-sak').value;
-                    // Simpan nilai mentah (number), bukan format tampilan
                     const kgNum = parseLokal(kgRaw);
                     const sakNum = parseInt(sakRaw.replace(/\./g, "")) || 0;
                     if (kgNum > 0 || sakNum > 0) {
@@ -2124,7 +2183,7 @@
                 tanggal: document.getElementById("f-tanggal").value,
                 sj_kg: parseLokal(document.getElementById("f-jum-sj").value),
                 sj_sak: parseLokal(document.getElementById("f-sak-sj").value),
-                ecmu: document.getElementById("f-ecmu").value,
+                nokontainer: document.getElementById("f-nokontainer").value,
                 petugas: document.getElementById("f-petugas").value,
                 qc: document.getElementById("f-qc").value,
                 notimbang: document.getElementById("f-notimbang").value,
@@ -2208,7 +2267,9 @@
             reader.onload = async (e) => {
                 try {
                     const data = new Uint8Array(e.target.result);
-                    const wb = XLSX.read(data, { type: 'array', cellDates: true });
+                    // FIX: hapus cellDates: true agar tanggal dibaca sebagai angka (serial Excel)
+                    // dan di-convert manual via parseExDate tanpa terkena timezone shift
+                    const wb = XLSX.read(data, { type: 'array' });
                     const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 });
                     if (rows.length < 5) throw new Error("Excel tidak valid");
 
@@ -2250,7 +2311,7 @@
                         const stokRow = findRowByLabel("Jumlah Total");
                         const sjKgRow = findRowByLabel("Jumlah Surat Jalan");
                         const sjSakRow = findRowByLabel("Jumlah Sak Surat Jalan");
-                        const ecmuRow = findRowByLabel("SPNU") || findRowByLabel("ECMU");
+                        const nkRow = findRowByLabel("No. Kontainer") || findRowByLabel("Nomor Kontainer") || findRowByLabel("SPNU") || findRowByLabel("ECMU");
                         const petRow = findRowByLabel("Petugas Timbang");
                         const qcRow = findRowByLabel("QC");
                         const noTimRow = findRowByLabel("Nomor Timbangan");
@@ -2259,7 +2320,7 @@
                         const stok = stokRow ? parseExNum(stokRow[4]) : 0;
                         const sjKg = sjKgRow ? parseExNum(sjKgRow[4]) : 0;
                         const sjSak = sjSakRow ? (parseInt(parseExNum(sjSakRow[4])) || 0) : 0;
-                        const ecmu = ecmuRow ? String(ecmuRow[4] || "0") : "0";
+                        const nokontainer = nkRow ? String(nkRow[4] || "") : "";
                         const pet = petRow ? String(petRow[4] || "") : "";
                         const qc = qcRow ? String(qcRow[4] || "") : "";
                         const noTim = noTimRow ? String(noTimRow[4] || "") : "";
@@ -2326,7 +2387,7 @@
 
                         const id = generateOtomatisId(mat, tglStr);
                         final.push([
-                            id, mat, kat, stok, 0, "Kg", sup, tglStr, sjKg, sjSak, ecmu, pet, qc, noTim, "", JSON.stringify(scData), plat
+                            id, mat, kat, stok, 0, "Kg", sup, tglStr, sjKg, sjSak, nokontainer, pet, qc, noTim, "", JSON.stringify(scData), plat
                         ]);
                     } else {
                         for (let i = 1; i < rows.length; i++) {
@@ -2382,7 +2443,7 @@
             data.push([]);
             data.push(["Selisih Bongkaran", "", "", ":", -64, "Kg"]);
             data.push(["Selisih Sak", "", "", ":", -5, "Sak"]);
-            data.push(["SPNU", "", "", ":", "0"]);
+            data.push(["No. Kontainer", "", "", ":", "0"]);
             data.push([]);
             data.push(["Petugas Timbang", "", "", ":", "Bagus"]);
             data.push(["QC", "", "", ":", "Narno"]);
@@ -2427,7 +2488,7 @@
                     "Kode", "Tanggal", "Material", "Kategori", "Supplier", "Plat",
                     "No. Timbangan", "Berat Total (Kg)", "Jumlah Sak",
                     "SJ Kg", "SJ Sak", "Selisih Bongkaran (Kg)", "Selisih Sak",
-                    "ECMU/SPNU", "Petugas", "QC", "Catatan"
+                    "No. Kontainer", "Petugas", "QC", "Catatan"
                 ];
 
                 const sheetData = [header];
@@ -2440,9 +2501,10 @@
                     const selisihKg = stok > 0 ? parseFloat((stok - sjKg).toFixed(1)) : "";
                     const selisihSak = totalSak > 0 ? (totalSak - sjSak) : "";
 
+                    // FIX: gunakan localDate() agar export tidak minus 1 hari
                     let tglDisplay = d.tanggal || "";
                     if (tglDisplay) {
-                        const dt = new Date(tglDisplay);
+                        const dt = localDate(tglDisplay);
                         if (!isNaN(dt.getTime())) {
                             tglDisplay = `${String(dt.getDate()).padStart(2, '0')}/${String(dt.getMonth() + 1).padStart(2, '0')}/${dt.getFullYear()}`;
                         }
@@ -2462,7 +2524,7 @@
                         sjSak || "",
                         selisihKg,
                         selisihSak,
-                        d.ecmu || "",
+                        d.nokontainer || "",
                         d.petugas || "",
                         d.qc || "",
                         d.catatan || ""
@@ -2499,23 +2561,28 @@
             }
         }
 
+        // FIX: parseExDate sekarang menangani serial number Excel secara langsung
+        // karena cellDates:true sudah dihapus. Gunakan UTC methods untuk menghindari timezone shift.
         function parseExDate(val) {
             if (!val) return "";
+            // Jika masih berupa Date object (misal dari sumber lain)
             if (val instanceof Date && !isNaN(val.getTime())) {
-                const yyyy = val.getFullYear();
-                const mm = String(val.getMonth() + 1).padStart(2, '0');
-                const dd = String(val.getDate()).padStart(2, '0');
+                const yyyy = val.getUTCFullYear();
+                const mm = String(val.getUTCMonth() + 1).padStart(2, '0');
+                const dd = String(val.getUTCDate()).padStart(2, '0');
                 return `${yyyy}-${mm}-${dd}`;
             }
             const s = String(val).split(" ")[0];
             const p = s.split("/");
             if (p.length === 3) return `${p[2]}-${p[1].padStart(2, '0')}-${p[0].padStart(2, '0')}`;
+            // Serial number Excel (tanpa cellDates, tanggal masuk ke sini sebagai angka)
             if (typeof val === "number") {
                 const d = new Date(Math.round((val - 25569) * 86400 * 1000));
                 if (!isNaN(d.getTime())) {
-                    const yyyy = d.getFullYear();
-                    const mm = String(d.getMonth() + 1).padStart(2, '0');
-                    const dd = String(d.getDate()).padStart(2, '0');
+                    // Gunakan UTC methods agar tidak terkena timezone offset
+                    const yyyy = d.getUTCFullYear();
+                    const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+                    const dd = String(d.getUTCDate()).padStart(2, '0');
                     return `${yyyy}-${mm}-${dd}`;
                 }
             }
