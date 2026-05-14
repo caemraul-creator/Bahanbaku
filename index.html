@@ -155,16 +155,6 @@
             --kali-ico: #ba7517;
         }
 
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --kali-bg: #412402;
-                --kali-bg2: #4f2e05;
-                --kali-border: #ba7517;
-                --kali-text: #fac775;
-                --kali-ico: #ef9f27;
-            }
-        }
-
         /* Gudang Troso — tema Teal */
         :root {
             --troso-bg: #e1f5ee;
@@ -172,16 +162,6 @@
             --troso-border: #1d9e75;
             --troso-text: #04342c;
             --troso-ico: #0f6e56;
-        }
-
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --troso-bg: #04342c;
-                --troso-bg2: #064038;
-                --troso-border: #1d9e75;
-                --troso-text: #5dcaa5;
-                --troso-ico: #1d9e75;
-            }
         }
 
         .wcard {
@@ -1104,6 +1084,188 @@
                 gap: 10px;
             }
         }
+
+        /* ===== STICKY HEADER ===== */
+        thead tr {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        /* ===== SORTABLE COLUMN ===== */
+        .th-sort {
+            cursor: pointer;
+            user-select: none;
+            white-space: nowrap;
+        }
+
+        .th-sort:hover {
+            color: var(--text);
+        }
+
+        .sort-ico {
+            display: inline-block;
+            margin-left: 4px;
+            opacity: 0.35;
+            font-size: 10px;
+        }
+
+        .th-sort.asc .sort-ico::after {
+            content: "▲";
+            opacity: 1;
+        }
+
+        .th-sort.desc .sort-ico::after {
+            content: "▼";
+            opacity: 1;
+        }
+
+        .th-sort:not(.asc):not(.desc) .sort-ico::after {
+            content: "⇅";
+        }
+
+        /* ===== HIGHLIGHT SEARCH ===== */
+        .hl {
+            background: #fef08a;
+            border-radius: 2px;
+            padding: 0 1px;
+        }
+
+        /* ===== DATE FILTER ===== */
+        .date-filter-wrap {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border: 0.5px solid #c2e2ce;
+            border-radius: var(--radius);
+            background: var(--bg);
+            padding: 0 10px;
+        }
+
+        .date-filter-wrap i {
+            color: #a0a09c;
+            font-size: 15px;
+            flex-shrink: 0;
+        }
+
+        .date-filter-wrap input[type=date] {
+            border: none;
+            background: transparent;
+            font-family: inherit;
+            font-size: 12px;
+            color: var(--text);
+            padding: 7px 0;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .date-filter-wrap span {
+            color: var(--text3);
+            font-size: 11px;
+        }
+
+        .date-filter-wrap .reset-tgl {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #a0a09c;
+            padding: 0;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            line-height: 1;
+        }
+
+        .date-filter-wrap .reset-tgl:hover {
+            color: var(--text);
+        }
+
+        /* ===== BULK DELETE BTN ===== */
+        #btn-bulk-delete {
+            display: none;
+        }
+
+        #btn-bulk-delete.visible {
+            display: inline-flex;
+        }
+
+        /* ===== CHECKBOX ===== */
+        .cb-cell {
+            width: 36px;
+            text-align: center;
+            padding: 4px;
+        }
+
+        .cb-cell input[type=checkbox] {
+            width: 14px;
+            height: 14px;
+            cursor: pointer;
+            accent-color: #d13030;
+        }
+
+        /* ===== TABLE FOOTER TOTAL ===== */
+        .tbl-footer {
+            background: #f0fdf4;
+            border-top: 1px solid #c2e2ce;
+            padding: 9px 14px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            font-size: 12px;
+            color: var(--text2);
+            flex-wrap: wrap;
+        }
+
+        .tbl-footer strong {
+            color: #1a6b3a;
+        }
+
+        /* ===== PER-PAGE SELECTOR ===== */
+        .perpage-sel {
+            font-family: inherit;
+            font-size: 12px;
+            border: 0.5px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--bg);
+            color: var(--text);
+            padding: 4px 6px;
+            cursor: pointer;
+        }
+
+        /* ===== RETRY BUTTON ===== */
+        .retry-btn {
+            margin-top: 10px;
+            padding: 8px 18px;
+            border-radius: var(--radius);
+            border: 0.5px solid var(--border2);
+            background: var(--bg);
+            font-family: inherit;
+            font-size: 13px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text);
+        }
+
+        .retry-btn:hover {
+            background: var(--bg2);
+        }
+
+        /* ===== ROW CLICK ===== */
+        tbody tr {
+            cursor: pointer;
+        }
+
+        tbody tr td.act-cell {
+            cursor: default;
+        }
+
+        @media (max-width: 600px) {
+            .date-filter-wrap {
+                min-width: 100%;
+            }
+        }
     </style>
 </head>
 
@@ -1179,20 +1341,33 @@
             </div>
 
             <div class="toolbar" style="gap: 10px; flex-wrap: wrap;">
-                <div class="search-wrap" style="flex: 1; min-width: 200px; max-width: 300px; border-color: #c2e2ce;">
+                <div class="search-wrap" style="flex: 1; min-width: 180px; max-width: 260px; border-color: #c2e2ce;">
                     <i class="ti ti-search" style="color: #a0a09c;"></i>
                     <input type="text" id="search-input" placeholder="Cari kode, supplier, plat..."
                         oninput="debounceSearch()" />
                 </div>
                 <div class="search-wrap"
-                    style="width: auto; min-width: 140px; background: transparent; border-color: #c2e2ce;">
+                    style="width: auto; min-width: 130px; background: transparent; border-color: #c2e2ce;">
                     <i class="ti ti-filter" style="color: #a0a09c;"></i>
                     <select class="filter-sel" id="filter-kat" onchange="renderTable()"
                         style="border: none; padding-left: 36px; height: 100%; width: 100%; background: transparent; outline: none; -webkit-appearance: none; appearance: none;">
                         <option value="">Semua Kategori</option>
                     </select>
                 </div>
-                <div style="display: flex; gap: 8px; margin-left: auto;">
+                <!-- Filter Tanggal Range -->
+                <div class="date-filter-wrap">
+                    <i class="ti ti-calendar"></i>
+                    <input type="date" id="filter-dari" onchange="renderTable()" title="Dari Tanggal">
+                    <span>—</span>
+                    <input type="date" id="filter-sampai" onchange="renderTable()" title="Sampai Tanggal">
+                    <button class="reset-tgl" onclick="resetFilterTanggal()" title="Reset tanggal"><i
+                            class="ti ti-x"></i></button>
+                </div>
+                <div style="display: flex; gap: 8px; margin-left: auto; align-items: center; flex-wrap: wrap;">
+                    <button class="btn-sm btn-outline" id="btn-bulk-delete" onclick="bulkHapus()"
+                        style="color: #d13030; border-color: #f5b3b3; background: #fef2f2; font-weight: 500;">
+                        <i class="ti ti-trash"></i> <span id="bulk-count-lbl">Hapus</span>
+                    </button>
                     <button class="btn-sm" onclick="bukaModal()"
                         style="background-color: #0d9463; color: white; border: none; font-weight: 500;">
                         <i class="ti ti-plus"></i> Tambah
@@ -1212,13 +1387,19 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>Kode</th>
-                            <th>Tanggal</th>
-                            <th>Supplier</th>
+                            <th class="cb-cell"><input type="checkbox" id="cb-all" onclick="toggleSelectAll()"
+                                    title="Pilih semua"></th>
+                            <th class="th-sort" onclick="setSortCol('id')" id="th-id">Kode<span class="sort-ico"></span>
+                            </th>
+                            <th class="th-sort desc" onclick="setSortCol('tanggal')" id="th-tanggal">Tanggal<span
+                                    class="sort-ico"></span></th>
+                            <th class="th-sort" onclick="setSortCol('nama')" id="th-nama">Supplier / Material<span
+                                    class="sort-ico"></span></th>
                             <th>Plat</th>
                             <th>No. Timbangan</th>
                             <th>Kategori</th>
-                            <th>Berat (Kg)</th>
+                            <th class="th-sort" onclick="setSortCol('stok')" id="th-stok">Berat (Kg)<span
+                                    class="sort-ico"></span></th>
                             <th>Sak</th>
                             <th>Petugas</th>
                             <th>Aksi</th>
@@ -1228,7 +1409,16 @@
                 </table>
                 <div class="pgn">
                     <span id="pgn-info">—</span>
-                    <div class="pgn-btns" id="pgn-btns"></div>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <label style="font-size:12px;color:var(--text2);">Baris:</label>
+                        <select class="perpage-sel" id="perpage-sel" onchange="ubahPerPage(this.value)">
+                            <option value="10">10</option>
+                            <option value="20">20</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                        <div class="pgn-btns" id="pgn-btns"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1488,7 +1678,7 @@
         let gudangAktif = null;
         let dataBahan = [];
         let page = 1;
-        const PER_PAGE = 10;
+        let perPage = 10;
 
         // ===== CACHE untuk percepatan =====
         let _sakCache = new WeakMap();     // Cache hitungSakFromScaling per item
@@ -1499,6 +1689,13 @@
         // ===== DATA CACHE (menghindari fetch ulang) =====
         const _dataCache = {};             // { gudang: { data, timestamp } }
         const CACHE_TTL = 30 * 1000;      // Cache 30 detik
+
+        // ===== SORT STATE =====
+        let _sortCol = 'tanggal';
+        let _sortDir = 'desc';
+
+        // ===== SELECTION STATE =====
+        let _selectedIds = new Set();
 
         // ===== DEBOUNCE SEARCH =====
         let _searchTimer = null;
@@ -1706,7 +1903,7 @@
             const useCache = !forceRefresh && cached && (Date.now() - cached.timestamp) < CACHE_TTL;
 
             if (!useCache) {
-                tbody.innerHTML = `<tr><td colspan="10"><div class="loading"><i class="ti ti-loader"></i>Memuat data...</div></td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="11"><div class="loading"><i class="ti ti-loader"></i>Memuat data...</div></td></tr>`;
             }
             try {
                 dataBahan = await apiFetch("GET", gudangAktif);
@@ -1728,7 +1925,7 @@
                 updateStats();
                 renderTable();
             } catch (e) {
-                tbody.innerHTML = `<tr><td colspan="10"><div class="empty"><i class="ti ti-wifi-off"></i>${e.message.includes("SCRIPT_URL") ? "SCRIPT_URL belum diisi. Lihat panduan setup." : "Gagal memuat data: " + e.message}</div></td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="11"><div class="empty"><i class="ti ti-wifi-off"></i>${e.message.includes("SCRIPT_URL") ? "SCRIPT_URL belum diisi. Lihat panduan setup." : "Gagal memuat data: " + e.message}<br><button class="retry-btn" onclick="muatData(true)"><i class="ti ti-refresh"></i> Coba Lagi</button></div></td></tr>`;
             }
         }
 
@@ -1806,17 +2003,76 @@
         function getFiltered() {
             const q = document.getElementById("search-input").value.toLowerCase();
             const k = document.getElementById("filter-kat").value;
-            return dataBahan.filter((d) => {
+            const dari = document.getElementById("filter-dari")?.value || "";
+            const sampai = document.getElementById("filter-sampai")?.value || "";
+            const tsDari = dari ? localDate(dari).getTime() : 0;
+            const tsSampai = sampai ? localDate(sampai).getTime() + 86400000 - 1 : Infinity;
+
+            let result = dataBahan.filter((d) => {
                 const mq =
                     !q ||
                     (d.nama && d.nama.toLowerCase().includes(q)) ||
                     (d.id && d.id.toLowerCase().includes(q)) ||
                     (d.supplier && d.supplier.toLowerCase().includes(q)) ||
                     (d.plat && d.plat.toLowerCase().includes(q)) ||
+                    (d.ecmu && d.ecmu.toLowerCase().includes(q)) ||
                     (d.notimbang && d.notimbang.toLowerCase().includes(q));
                 const mk = !k || d.kat === k;
-                return mq && mk;
+                let mt = true;
+                if (dari || sampai) {
+                    const ts = d.tanggal ? localDate(d.tanggal).getTime() : 0;
+                    mt = ts >= tsDari && ts <= tsSampai;
+                }
+                return mq && mk && mt;
             });
+
+            // Sort
+            result.sort((a, b) => {
+                let va, vb;
+                if (_sortCol === 'tanggal') {
+                    va = a.tanggal ? localDate(a.tanggal).getTime() : 0;
+                    vb = b.tanggal ? localDate(b.tanggal).getTime() : 0;
+                } else if (_sortCol === 'stok') {
+                    va = parseFloat(a.stok) || 0;
+                    vb = parseFloat(b.stok) || 0;
+                } else if (_sortCol === 'nama') {
+                    va = (a.nama || "").toLowerCase();
+                    vb = (b.nama || "").toLowerCase();
+                    return _sortDir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
+                } else {
+                    va = (a[_sortCol] || "").toLowerCase();
+                    vb = (b[_sortCol] || "").toLowerCase();
+                    return _sortDir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
+                }
+                return _sortDir === 'asc' ? va - vb : vb - va;
+            });
+            return result;
+        }
+
+        function setSortCol(col) {
+            if (_sortCol === col) {
+                _sortDir = _sortDir === 'asc' ? 'desc' : 'asc';
+            } else {
+                _sortCol = col;
+                _sortDir = col === 'tanggal' || col === 'stok' ? 'desc' : 'asc';
+            }
+            // Update header classes
+            document.querySelectorAll('.th-sort').forEach(th => th.classList.remove('asc', 'desc'));
+            const th = document.getElementById('th-' + col);
+            if (th) th.classList.add(_sortDir);
+            renderPage();
+        }
+
+        function resetFilterTanggal() {
+            document.getElementById("filter-dari").value = "";
+            document.getElementById("filter-sampai").value = "";
+            renderTable();
+        }
+
+        function ubahPerPage(val) {
+            perPage = parseInt(val) || 10;
+            page = 1;
+            renderPage();
         }
 
         // FIX: gunakan localDate() agar tidak terkena timezone shift
@@ -1838,6 +2094,27 @@
             return result;
         }
 
+        function formatRelativeDate(str) {
+            if (!str) return { rel: "-", full: "" };
+            const d = localDate(str);
+            if (isNaN(d.getTime())) return { rel: str, full: str };
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const tgt = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+            const diffMs = today - tgt;
+            const diffDays = Math.round(diffMs / 86400000);
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            const full = `${dd}/${mm}/${yyyy}`;
+            let rel;
+            if (diffDays === 0) rel = `<span style="color:#0d9463;font-weight:600;">Hari ini</span>`;
+            else if (diffDays === 1) rel = `<span style="color:#0f6e56;">Kemarin</span>`;
+            else if (diffDays <= 7) rel = `<span style="color:#636360;">${diffDays} hari lalu</span>`;
+            else rel = full;
+            return { rel, full };
+        }
+
         function statusInfo(d) {
             const p = d.stok / d.min;
             if (d.stok === 0)
@@ -1856,7 +2133,78 @@
 
         function renderTable() {
             page = 1;
+            _selectedIds.clear();
+            _updateBulkBtn();
             renderPage();
+        }
+
+        function _updateBulkBtn() {
+            const btn = document.getElementById("btn-bulk-delete");
+            const lbl = document.getElementById("bulk-count-lbl");
+            if (_selectedIds.size > 0) {
+                btn.classList.add("visible");
+                lbl.textContent = `Hapus (${_selectedIds.size})`;
+            } else {
+                btn.classList.remove("visible");
+            }
+            // Update header checkbox state
+            const cbAll = document.getElementById("cb-all");
+            if (!cbAll) return;
+            const rows = getFiltered();
+            const visibleIds = rows.slice((page - 1) * perPage, page * perPage).map(d => d.id);
+            const allChecked = visibleIds.length > 0 && visibleIds.every(id => _selectedIds.has(id));
+            cbAll.checked = allChecked;
+            cbAll.indeterminate = !allChecked && visibleIds.some(id => _selectedIds.has(id));
+        }
+
+        function toggleSelectAll() {
+            const rows = getFiltered();
+            const visibleIds = rows.slice((page - 1) * perPage, page * perPage).map(d => d.id);
+            const allChecked = visibleIds.every(id => _selectedIds.has(id));
+            if (allChecked) {
+                visibleIds.forEach(id => _selectedIds.delete(id));
+            } else {
+                visibleIds.forEach(id => _selectedIds.add(id));
+            }
+            renderPage();
+        }
+
+        function toggleSelectRow(id, e) {
+            e.stopPropagation();
+            if (_selectedIds.has(id)) _selectedIds.delete(id);
+            else _selectedIds.add(id);
+            _updateBulkBtn();
+            const cb = document.querySelector(`input.cb-row[data-id="${CSS.escape(id)}"]`);
+            if (cb) cb.checked = _selectedIds.has(id);
+            const cbAll = document.getElementById("cb-all");
+            const rows = getFiltered();
+            const visibleIds = rows.slice((page - 1) * perPage, page * perPage).map(d => d.id);
+            const allChecked = visibleIds.length > 0 && visibleIds.every(i => _selectedIds.has(i));
+            if (cbAll) {
+                cbAll.checked = allChecked;
+                cbAll.indeterminate = !allChecked && visibleIds.some(i => _selectedIds.has(i));
+            }
+        }
+
+        async function bulkHapus() {
+            if (_selectedIds.size === 0) return;
+            if (!confirm(`Hapus ${_selectedIds.size} data yang dipilih? Tindakan ini tidak dapat dibatalkan.`)) return;
+            const ids = [..._selectedIds];
+            const btn = document.getElementById("btn-bulk-delete");
+            btn.disabled = true;
+            btn.innerHTML = '<i class="ti ti-loader"></i> Menghapus...';
+            let sukses = 0, gagal = 0;
+            for (const id of ids) {
+                try {
+                    await apiFetch("POST", gudangAktif, { action: "delete", id });
+                    sukses++;
+                } catch { gagal++; }
+            }
+            btn.disabled = false;
+            _selectedIds.clear();
+            _updateBulkBtn();
+            showToast(`${sukses} data dihapus${gagal > 0 ? ", " + gagal + " gagal" : ""}`, gagal > 0);
+            await muatData(true);
         }
 
         // OPTIMASI: cache hasil JSON.parse + perhitungan sak per item
@@ -1879,59 +2227,88 @@
             return totalSakRiil;
         }
 
+        // ===== HIGHLIGHT HELPER =====
+        function hlText(text, q) {
+            if (!q || !text) return esc(text || "");
+            const safe = esc(text);
+            const safeQ = esc(q).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            return safe.replace(new RegExp(`(${safeQ})`, 'gi'), '<span class="hl">$1</span>');
+        }
+
         function renderPage() {
+            const q = document.getElementById("search-input").value.toLowerCase();
             const rows = getFiltered();
             const total = rows.length;
-            const start = (page - 1) * PER_PAGE;
-            const end = Math.min(start + PER_PAGE, total);
+            const start = (page - 1) * perPage;
+            const end = Math.min(start + perPage, total);
             const slice = rows.slice(start, end);
             const tbody = document.getElementById("tbl-body");
 
+
             if (slice.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="10"><div class="empty"><i class="ti ti-mood-empty"></i>Tidak ada bahan ditemukan</div></td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="11"><div class="empty"><i class="ti ti-mood-empty"></i>Tidak ada bahan ditemukan</div></td></tr>`;
             } else {
-                // OPTIMASI: pre-compute semua data yang dibutuhkan sekali jalan
-                const html = new Array(slice.length);
+                const htmlParts = new Array(slice.length);
                 for (let i = 0; i < slice.length; i++) {
                     const d = slice[i];
+                    const isSelected = _selectedIds.has(d.id);
                     const totalSakRiil = hitungSakFromScaling(d);
-                    html[i] = `<tr>
-        <td style="color: #0d9463; font-weight: 500;">${esc(d.id)}</td>
-        <td>${formatTanggal(d.tanggal)}</td>
-        <td>${esc(d.nama)} ${d.supplier ? esc(d.supplier) : ""}</td>
+                    const { rel, full } = formatRelativeDate(d.tanggal);
+                    const namaHl = hlText(d.nama, q);
+                    const supHl = hlText(d.supplier, q);
+                    const idHl = hlText(d.id, q);
+                    const safeid = esc(d.id);
+                    htmlParts[i] = `<tr onclick="viewBahan('${safeid}')" style="${isSelected ? 'background:#fff5f5;' : ''}">
+        <td class="cb-cell" onclick="toggleSelectRow('${safeid}', event)">
+            <input type="checkbox" class="cb-row" data-id="${safeid}" ${isSelected ? 'checked' : ''} onclick="toggleSelectRow('${safeid}', event)">
+        </td>
+        <td style="color: #0d9463; font-weight: 500;">${idHl}</td>
+        <td title="${full}">${rel}</td>
+        <td>${namaHl}${d.supplier ? ' <span style="color:var(--text2);font-size:11px;">— ' + supHl + '</span>' : ''}</td>
         <td><span style="border: 1px solid var(--border2); padding: 2px 8px; border-radius: 4px; font-size: 11px; white-space: nowrap;">${esc(d.plat || "-")}</span></td>
         <td><span style="background: #f1f5f9; border: 0.5px solid #cbd5e1; padding: 2px 8px; border-radius: 4px; font-size: 11px; white-space: nowrap;">${esc(d.notimbang || "-")}</span></td>
         <td><span style="background: #eaf3de; color: #3b6d11; padding: 2px 8px; border-radius: 12px; font-weight: 500; font-size: 11px;">${esc(d.kat || "-")}</span></td>
         <td style="text-align: right; font-weight: 600;">${d.stok ? formatLokal(d.stok) : "0,0"}</td>
         <td style="text-align: center;">${totalSakRiil ? formatLokalInt(totalSakRiil) : "-"}</td>
         <td>${esc(d.petugas || "-")}</td>
-        <td>
+        <td class="act-cell" onclick="event.stopPropagation()">
             <div class="act-wrap">
-                <button class="act-btn" style="color: #0d9463" onclick="viewBahan('${esc(d.id)}')" title="Lihat"><i class="ti ti-eye"></i></button>
-                <button class="act-btn" style="color: #e07a2a" onclick="editBahan('${esc(d.id)}')" title="Edit"><i class="ti ti-edit"></i></button>
-                <button class="act-btn" style="color: #d13030" onclick="hapusBahan('${esc(d.id)}')" title="Hapus"><i class="ti ti-trash"></i></button>
+                <button class="act-btn" style="color: #0d9463" onclick="viewBahan('${safeid}')" title="Lihat"><i class="ti ti-eye"></i></button>
+                <button class="act-btn" style="color: #e07a2a" onclick="editBahan('${safeid}')" title="Edit"><i class="ti ti-edit"></i></button>
+                <button class="act-btn" style="color: #d13030" onclick="hapusBahan('${safeid}')" title="Hapus"><i class="ti ti-trash"></i></button>
             </div>
         </td>
       </tr>`;
                 }
-                tbody.innerHTML = html.join("");
+                tbody.innerHTML = htmlParts.join("");
             }
 
             document.getElementById("pgn-info").textContent =
                 total === 0
                     ? "Tidak ada data"
-                    : `Menampilkan ${start + 1}–${end} dari ${formatLokalInt(total)} bahan`;
+                    : `Menampilkan ${start + 1}–${end} dari ${formatLokalInt(total)} bongkaran`;
 
-            const totalPages = Math.ceil(total / PER_PAGE);
+            const totalPages = Math.ceil(total / perPage);
             const pgn = document.getElementById("pgn-btns");
-            let html = "";
+            let pgnHtml = "";
             if (page > 1)
-                html += `<button class="pgn-btn" onclick="goPage(${page - 1})"><i class="ti ti-chevron-left"></i></button>`;
-            for (let i = 1; i <= totalPages; i++)
-                html += `<button class="pgn-btn${i === page ? " cur" : ""}" onclick="goPage(${i})">${i}</button>`;
+                pgnHtml += `<button class="pgn-btn" onclick="goPage(${page - 1})"><i class="ti ti-chevron-left"></i></button>`;
+
+            // Smart pagination: show max 5 page buttons
+            const maxPgn = 5;
+            let pStart = Math.max(1, page - Math.floor(maxPgn / 2));
+            let pEnd = Math.min(totalPages, pStart + maxPgn - 1);
+            if (pEnd - pStart < maxPgn - 1) pStart = Math.max(1, pEnd - maxPgn + 1);
+            if (pStart > 1) pgnHtml += `<button class="pgn-btn" onclick="goPage(1)">1</button><span style="padding:4px 2px;font-size:11px;color:var(--text3);">…</span>`;
+            for (let i = pStart; i <= pEnd; i++)
+                pgnHtml += `<button class="pgn-btn${i === page ? " cur" : ""}" onclick="goPage(${i})">${i}</button>`;
+            if (pEnd < totalPages) pgnHtml += `<span style="padding:4px 2px;font-size:11px;color:var(--text3);">…</span><button class="pgn-btn" onclick="goPage(${totalPages})">${totalPages}</button>`;
+
             if (page < totalPages)
-                html += `<button class="pgn-btn" onclick="goPage(${page + 1})"><i class="ti ti-chevron-right"></i></button>`;
-            pgn.innerHTML = html;
+                pgnHtml += `<button class="pgn-btn" onclick="goPage(${page + 1})"><i class="ti ti-chevron-right"></i></button>`;
+            pgn.innerHTML = pgnHtml;
+
+            _updateBulkBtn();
         }
 
         function goPage(p) {
@@ -2090,7 +2467,7 @@
 
                 document.getElementById("f-jum-sj").value = (bahan.sj_kg !== undefined && bahan.sj_kg !== "") ? formatLokal(bahan.sj_kg) : "";
                 document.getElementById("f-sak-sj").value = (bahan.sj_sak !== undefined && bahan.sj_sak !== "") ? formatLokalInt(bahan.sj_sak) : "";
-                document.getElementById("f-nokontainer").value = bahan.nokontainer || "";
+                document.getElementById("f-nokontainer").value = bahan.ecmu || "";
                 document.getElementById("f-petugas").value = bahan.petugas || "";
                 document.getElementById("f-qc").value = bahan.qc || "";
                 document.getElementById("f-notimbang").value = bahan.notimbang || "";
@@ -2153,10 +2530,52 @@
             }
 
             document.getElementById("modal-overlay").classList.add("open");
+
+            // Auto-restore draft if new form (not edit)
+            if (!bahan) {
+                try {
+                    const draft = JSON.parse(localStorage.getItem("stokbahan_draft") || "null");
+                    if (draft && draft.gudang === gudangAktif) {
+                        const fields = ["f-nama", "f-supplier", "f-kat", "f-tanggal", "f-jum-sj", "f-sak-sj",
+                            "f-nokontainer", "f-petugas", "f-qc", "f-notimbang", "f-plat", "f-catatan"];
+                        let restored = false;
+                        fields.forEach(id => {
+                            const el = document.getElementById(id);
+                            if (el && draft[id] !== undefined && draft[id] !== "") {
+                                el.value = draft[id];
+                                restored = true;
+                            }
+                        });
+                        if (restored) showToast("Draft form dipulihkan", false);
+                        _hitungScallingNow();
+                        hitungSelisih();
+                    }
+                } catch (e) { }
+            }
+
+            // Pasang auto-save listener
+            form._draftHandler = function () {
+                if (!document.getElementById("f-is-edit").value) {
+                    const fields = ["f-nama", "f-supplier", "f-kat", "f-tanggal", "f-jum-sj", "f-sak-sj",
+                        "f-nokontainer", "f-petugas", "f-qc", "f-notimbang", "f-plat", "f-catatan"];
+                    const draft = { gudang: gudangAktif };
+                    fields.forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) draft[id] = el.value;
+                    });
+                    try { localStorage.setItem("stokbahan_draft", JSON.stringify(draft)); } catch (e) { }
+                }
+            };
+            form.addEventListener("input", form._draftHandler);
         }
 
         function tutupModal() {
             document.getElementById("modal-overlay").classList.remove("open");
+            const form = document.getElementById("form-scalling");
+            if (form._draftHandler) {
+                form.removeEventListener("input", form._draftHandler);
+                form._draftHandler = null;
+            }
         }
 
         function tutupModalOverlay(e) {
@@ -2251,7 +2670,7 @@
                 tanggal: document.getElementById("f-tanggal").value,
                 sj_kg: parseLokal(document.getElementById("f-jum-sj").value),
                 sj_sak: parseLokal(document.getElementById("f-sak-sj").value),
-                nokontainer: document.getElementById("f-nokontainer").value,
+                ecmu: document.getElementById("f-nokontainer").value,
                 petugas: document.getElementById("f-petugas").value,
                 qc: document.getElementById("f-qc").value,
                 notimbang: document.getElementById("f-notimbang").value,
@@ -2265,6 +2684,9 @@
             btn.innerHTML = '<i class="ti ti-loader"></i> Menyimpan...';
             try {
                 await apiFetch("POST", gudangAktif, payload);
+                if (!isEdit) {
+                    try { localStorage.removeItem("stokbahan_draft"); } catch (e) { }
+                }
                 tutupModal();
                 showToast(
                     isEdit ? "Data berhasil diperbarui" : "Data berhasil ditambahkan",
