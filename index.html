@@ -9,6 +9,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="config.js"></script>
     <style>
+        /* ✅ BUG FIX #2: @import harus di baris PERTAMA dalam <style>, sebelum rule CSS apapun */
+        @import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap");
+
         /* ===== RESET & BASE ===== */
         *,
         *::before,
@@ -46,8 +49,6 @@
             color: var(--text);
             min-height: 100vh;
         }
-
-        @import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap");
 
         /* ===== LAYOUT ===== */
         .app {
@@ -96,31 +97,6 @@
         .brand-sub {
             font-size: 11px;
             color: var(--text2);
-        }
-
-        /* ===== CONFIG BANNER ===== */
-        .config-banner {
-            background: var(--warn-bg);
-            border: 0.5px solid var(--warn-text);
-            border-radius: var(--radius);
-            padding: 12px 16px;
-            margin-bottom: 1.5rem;
-            font-size: 13px;
-            color: var(--warn-text);
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-        }
-
-        .config-banner i {
-            font-size: 17px;
-            flex-shrink: 0;
-            margin-top: 1px;
-        }
-
-        .config-banner a {
-            color: var(--warn-text);
-            font-weight: 600;
         }
 
         /* ===== PILIH GUDANG ===== */
@@ -189,9 +165,7 @@
             padding: 1.5rem;
             cursor: pointer;
             position: relative;
-            transition:
-                border-color 0.2s,
-                background 0.2s;
+            transition: border-color 0.2s, background 0.2s;
         }
 
         .wcard.kali {
@@ -318,6 +292,7 @@
         .wstats {
             display: flex;
             gap: 20px;
+            flex-wrap: wrap;
         }
 
         .wstat-val {
@@ -517,14 +492,6 @@
             letter-spacing: -0.5px;
         }
 
-        .scard-val.ok {
-            color: var(--ok-text);
-        }
-
-        .scard-val.warn {
-            color: var(--warn-text);
-        }
-
         /* ===== TOOLBAR ===== */
         .toolbar {
             display: flex;
@@ -549,7 +516,8 @@
             color: var(--text2);
         }
 
-        .search-wrap input {
+        .search-wrap input,
+        .search-wrap select {
             width: 100%;
             padding: 9px 10px 9px 34px;
             border-radius: var(--radius);
@@ -558,17 +526,6 @@
             font-family: inherit;
             font-size: 13px;
             color: var(--text);
-        }
-
-        .filter-sel {
-            padding: 9px 10px;
-            border-radius: var(--radius);
-            border: 0.5px solid var(--border);
-            background: var(--bg);
-            font-family: inherit;
-            font-size: 13px;
-            color: var(--text);
-            cursor: pointer;
         }
 
         /* ===== TABLE ===== */
@@ -613,16 +570,6 @@
             background: var(--bg2);
         }
 
-        .td-nama {
-            font-weight: 500;
-        }
-
-        .td-kode {
-            font-size: 11px;
-            color: var(--text2);
-            margin-top: 2px;
-        }
-
         /* ===== BADGE ===== */
         .badge {
             display: inline-flex;
@@ -651,33 +598,6 @@
         .badge-danger {
             background: var(--danger-bg);
             color: var(--danger-text);
-        }
-
-        /* ===== STOK BAR ===== */
-        .stok-wrap {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .stok-bar-bg {
-            flex: 1;
-            height: 5px;
-            border-radius: 3px;
-            background: var(--border);
-            max-width: 80px;
-        }
-
-        .stok-bar {
-            height: 5px;
-            border-radius: 3px;
-        }
-
-        .stok-num {
-            font-size: 13px;
-            font-weight: 600;
-            min-width: 60px;
-            text-align: right;
         }
 
         /* ===== ACTION BTN ===== */
@@ -889,13 +809,6 @@
             justify-content: center;
         }
 
-        .form-error {
-            font-size: 12px;
-            color: var(--danger-text);
-            margin-top: 4px;
-            display: none;
-        }
-
         /* ===== TOAST ===== */
         .toast {
             position: fixed;
@@ -913,9 +826,7 @@
             z-index: 200;
             opacity: 0;
             transform: translateY(10px);
-            transition:
-                opacity 0.2s,
-                transform 0.2s;
+            transition: opacity 0.2s, transform 0.2s;
             pointer-events: none;
         }
 
@@ -941,36 +852,14 @@
                 grid-template-columns: 1fr 1fr;
             }
 
-            .stat-row .scard:last-child {
-                grid-column: 1 / -1;
-            }
-
-            table {
-                font-size: 12px;
-            }
-
-            th,
-            td {
-                padding: 9px 10px;
-            }
-
             .form-row,
-            .form-row-3 {
-                grid-template-columns: 1fr;
-            }
-
+            .form-row-3,
             .form-row-4 {
-                grid-template-columns: 1fr 1fr;
+                grid-template-columns: 1fr;
             }
 
             .modal {
                 padding: 1rem;
-                width: 100%;
-                border-radius: var(--radius);
-            }
-
-            .cell-wrap input {
-                font-size: 14px;
             }
         }
 
@@ -991,7 +880,6 @@
 
         .scalling-table-wrap {
             overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
             margin-bottom: 1rem;
             border: 0.5px solid var(--border);
             border-radius: var(--radius);
@@ -1057,7 +945,7 @@
         }
 
         .sc-input-sak {
-            width: 20px;
+            width: 24px;
             text-align: center;
             color: var(--info-text);
             font-weight: 600;
@@ -1068,13 +956,6 @@
             font-size: 11px;
             margin: 0 1px;
             user-select: none;
-        }
-
-        /* Hilangkan panah number input */
-        .scalling-table input[type=number]::-webkit-inner-spin-button,
-        .scalling-table input[type=number]::-webkit-outer-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
         }
 
         .summary-grid {
@@ -1115,31 +996,20 @@
                 <div class="wcard kali" id="wc-Kalipucang" onclick="pilihGudang('Kalipucang')">
                     <div class="wchk"><i class="ti ti-check"></i></div>
                     <div class="wcard-tag">Gudang A</div>
-                    <div class="wcard-ico">
-                        <i class="ti ti-building-warehouse"></i>
-                    </div>
+                    <div class="wcard-ico"><i class="ti ti-building-warehouse"></i></div>
                     <div class="wcard-name">Kalipucang</div>
-                    <div class="wcard-loc">
-                        <i class="ti ti-map-pin"></i> Kalipucang, Jepara
-                    </div>
+                    <div class="wcard-loc"><i class="ti ti-map-pin"></i> Kalipucang, Jepara</div>
                     <div class="wdiv"></div>
-                    <div class="wstats" id="ws-container-Kalipucang"
-                        style="display: flex; gap: 15px; flex-wrap: nowrap;">
-                    </div>
+                    <div class="wstats" id="ws-container-Kalipucang"></div>
                 </div>
                 <div class="wcard troso" id="wc-Troso" onclick="pilihGudang('Troso')">
                     <div class="wchk"><i class="ti ti-check"></i></div>
                     <div class="wcard-tag">Gudang B</div>
-                    <div class="wcard-ico">
-                        <i class="ti ti-building-warehouse"></i>
-                    </div>
+                    <div class="wcard-ico"><i class="ti ti-building-warehouse"></i></div>
                     <div class="wcard-name">Troso</div>
-                    <div class="wcard-loc">
-                        <i class="ti ti-map-pin"></i> Troso, Jepara
-                    </div>
+                    <div class="wcard-loc"><i class="ti ti-map-pin"></i> Troso, Jepara</div>
                     <div class="wdiv"></div>
-                    <div class="wstats" id="ws-container-Troso" style="display: flex; gap: 15px; flex-wrap: nowrap;">
-                    </div>
+                    <div class="wstats" id="ws-container-Troso"></div>
                 </div>
             </div>
             <button class="btn-primary" id="btn-masuk" disabled onclick="masuk()">
@@ -1152,9 +1022,7 @@
         <div class="page" id="pg-dashboard">
             <div class="topbar">
                 <div class="topbar-left">
-                    <button class="back-btn" onclick="kembali()" aria-label="Kembali">
-                        <i class="ti ti-arrow-left"></i>
-                    </button>
+                    <button class="back-btn" onclick="kembali()"><i class="ti ti-arrow-left"></i></button>
                     <div>
                         <div class="topbar-title" id="dash-title">Gudang</div>
                         <div class="topbar-sub">Daftar Bahan Baku</div>
@@ -1163,37 +1031,33 @@
                 <span class="badge-gudang" id="dash-badge">Gudang A</span>
             </div>
 
-            <div class="stat-row" id="stat-container">
-            </div>
+            <div class="stat-row" id="stat-container"></div>
 
-            <div class="toolbar" style="gap: 10px; flex-wrap: wrap;">
-                <div class="search-wrap" style="flex: 1; min-width: 200px; max-width: 300px; border-color: #c2e2ce;">
-                    <i class="ti ti-search" style="color: #a0a09c;"></i>
+            <div class="toolbar">
+                <div class="search-wrap">
+                    <i class="ti ti-search"></i>
                     <input type="text" id="search-input" placeholder="Cari kode, supplier, plat..."
                         oninput="renderTable()" />
                 </div>
-                <div class="search-wrap"
-                    style="width: auto; min-width: 140px; background: transparent; border-color: #c2e2ce;">
-                    <i class="ti ti-filter" style="color: #a0a09c;"></i>
-                    <select class="filter-sel" id="filter-kat" onchange="renderTable()"
-                        style="border: none; padding-left: 36px; height: 100%; width: 100%; background: transparent; outline: none; -webkit-appearance: none; appearance: none;">
-                        <option value="">Kategori</option>
-                        <option>Z/C+</option>
-                        <option>Z/C-</option>
-                        <option>Z/D</option>
+                <div class="search-wrap">
+                    <i class="ti ti-filter"></i>
+                    <select id="filter-kat" onchange="renderTable()">
+                        <option value="">Semua Kategori</option>
+                        <option value="Container 20ft">Container 20ft</option>
+                        <option value="Container 40ft">Container 40ft</option>
+                        <option value="Fuso">Fuso</option>
+                        <option value="Truck">Truck</option>
+                        <option value="Pickup">Pickup</option>
                     </select>
                 </div>
                 <div style="display: flex; gap: 8px; margin-left: auto;">
-                    <button class="btn-sm" onclick="bukaModal()"
-                        style="background-color: #0d9463; color: white; border: none; font-weight: 500;">
+                    <button class="btn-sm" onclick="bukaModal()" style="background-color: #0d9463; color: white;">
                         <i class="ti ti-plus"></i> Tambah
                     </button>
-                    <button class="btn-sm btn-outline" onclick="bukaModalExport()"
-                        style="color: #0d9463; border-color: #c2e2ce; background: transparent; font-weight: 500;">
+                    <button class="btn-sm btn-outline" onclick="bukaModalExport()" style="color: #0d9463;">
                         <i class="ti ti-download"></i> Export
                     </button>
-                    <button class="btn-sm btn-outline" onclick="bukaModalImport()"
-                        style="color: #e07a2a; border-color: #f7b781; background: transparent; font-weight: 500;">
+                    <button class="btn-sm btn-outline" onclick="bukaModalImport()" style="color: #e07a2a;">
                         <i class="ti ti-upload"></i> Import
                     </button>
                 </div>
@@ -1205,6 +1069,7 @@
                         <tr>
                             <th>Kode</th>
                             <th>Tanggal</th>
+                            <th>Material</th>
                             <th>Supplier</th>
                             <th>Plat</th>
                             <th>No. Timbangan</th>
@@ -1224,32 +1089,29 @@
             </div>
         </div>
     </div>
-    <!-- .app -->
 
     <!-- ===== MODAL SCALLING / TAMBAH BAHAN ===== -->
     <div class="overlay" id="modal-overlay" onclick="tutupModalOverlay(event)">
         <div class="modal modal-lg">
             <div class="modal-title">
                 <span id="modal-judul">Form Scalling Material</span>
-                <button class="modal-close" onclick="tutupModal()" type="button">
-                    <i class="ti ti-x"></i>
-                </button>
+                <button class="modal-close" onclick="tutupModal()"><i class="ti ti-x"></i></button>
             </div>
             <form onsubmit="simpanBahan(event)" id="form-scalling">
                 <input type="hidden" id="f-is-edit" />
                 <input type="hidden" id="f-id" />
-                <div class="form-row form-row-2" style="margin-bottom: 1rem;">
-                    <div class="form-group" style="margin-bottom: 0;">
+                <div class="form-row" style="margin-bottom: 1rem;">
+                    <div class="form-group">
                         <label class="form-label">Material *</label>
                         <input class="form-input" id="f-nama" placeholder="Contoh: Sumatra Charcoal" required />
                     </div>
-                    <div class="form-group" style="margin-bottom: 0;">
+                    <div class="form-group">
                         <label class="form-label">Supplier *</label>
                         <input class="form-input" id="f-supplier" placeholder="Contoh: Mr. Abror" required />
                     </div>
                 </div>
                 <div class="form-row" style="margin-bottom: 1rem;">
-                    <div class="form-group" style="margin-bottom: 0;">
+                    <div class="form-group">
                         <label class="form-label">Kategori *</label>
                         <select class="form-input" id="f-kat" required>
                             <option value="">Pilih Kategori</option>
@@ -1260,7 +1122,7 @@
                             <option value="Pickup">Pickup</option>
                         </select>
                     </div>
-                    <div class="form-group" style="margin-bottom: 0;">
+                    <div class="form-group">
                         <label class="form-label">Tanggal Bongkaran *</label>
                         <input type="date" class="form-input" id="f-tanggal" required />
                     </div>
@@ -1282,8 +1144,7 @@
                                 <th>Rontokan</th>
                             </tr>
                         </thead>
-                        <tbody id="scalling-body">
-                        </tbody>
+                        <tbody id="scalling-body"></tbody>
                         <tfoot>
                             <tr class="sum-row">
                                 <th>JML</th>
@@ -1323,9 +1184,9 @@
                         <div class="form-group">
                             <label class="form-label">Jumlah Surat Jalan (Kg)</label>
                             <input type="text" inputmode="decimal" class="form-input" id="f-jum-sj"
-                                oninput="hitungSelisih()" placeholder="Contoh: 25.090,5" />
+                                oninput="hitungSelisih()" placeholder="Contoh: 25090.5" />
                         </div>
-                        <div class="form-group" style="margin-bottom: 0;">
+                        <div class="form-group">
                             <label class="form-label">Selisih Bongkaran (Kg)</label>
                             <input class="form-input" id="f-selisih-bongkaran" readonly
                                 style="background: var(--bg3)" />
@@ -1342,41 +1203,40 @@
                             <input type="text" inputmode="numeric" class="form-input" id="f-sak-sj"
                                 oninput="hitungSelisih()" placeholder="Contoh: 645" />
                         </div>
-                        <div class="form-group" style="margin-bottom: 0;">
+                        <div class="form-group">
                             <label class="form-label">Selisih Sak</label>
                             <input class="form-input" id="f-selisih-sak" readonly style="background: var(--bg3)" />
                         </div>
                     </div>
                 </div>
 
-                <div class="form-row form-row-4" style="margin-top: 1.25rem;">
-                    <div class="form-group" style="margin-bottom: 0;">
+                <div class="form-row-4" style="margin-top: 1.25rem;">
+                    <div class="form-group">
                         <label class="form-label">ECMU/SPNU</label>
                         <input class="form-input" id="f-ecmu" />
                     </div>
-                    <div class="form-group" style="margin-bottom: 0;">
+                    <div class="form-group">
                         <label class="form-label">Petugas Timbang</label>
                         <input id="f-petugas" class="form-input" />
                     </div>
-                    <div class="form-group" style="margin-bottom: 0;">
+                    <div class="form-group">
                         <label class="form-label">QC</label>
                         <input id="f-qc" class="form-input" />
                     </div>
-                    <div class="form-group" style="margin-bottom: 0;">
+                    <div class="form-group">
                         <label class="form-label">Plat Kendaraan</label>
                         <input id="f-plat" class="form-input" placeholder="Contoh: K 1234 AB" />
                     </div>
-                    <div class="form-group" style="margin-bottom: 0;">
+                    <div class="form-group">
                         <label class="form-label">No. Timbangan</label>
                         <input id="f-notimbang" class="form-input" placeholder="Contoh: T-01" />
                     </div>
                 </div>
 
-                <div class="form-group" style="margin-top: 1.25rem; margin-bottom: 0;">
+                <div class="form-group" style="margin-top: 1.25rem;">
                     <label class="form-label">Note / Catatan Penting</label>
                     <textarea id="f-catatan" class="form-input" rows="2"
-                        placeholder="Masukkan catatan penting jika ada..."
-                        style="resize: vertical; min-height: 60px; font-family: inherit;"></textarea>
+                        placeholder="Masukkan catatan penting jika ada..." style="resize: vertical;"></textarea>
                 </div>
 
                 <div class="form-actions">
@@ -1396,23 +1256,18 @@
                 <span>Import Data Excel</span>
                 <button class="modal-close" onclick="tutupModalImport()"><i class="ti ti-x"></i></button>
             </div>
-            <div>
-                <div
-                    style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 12px; line-height: 1.6;">
-                    <strong>Instruksi:</strong><br>
-                    1. File Excel (.xlsx) dengan kolom: Nama, Kategori, Stok, Supplier, Tanggal, SJ_Kg, SJ_Sak,
-                    ECMU/SPNU, Petugas, QC, Plat, No Timbangan, Catatan.<br>
-                    2. Header di baris pertama akan dilewati.
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Pilih File Excel</label>
-                    <input type="file" id="f-import-file" accept=".xlsx, .xls" class="form-input"
-                        style="padding: 10px;" />
-                </div>
+            <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 12px;">
+                <strong>Instruksi:</strong><br>
+                1. File Excel (.xlsx) dengan kolom: Nama, Kategori, Stok, Supplier, Tanggal, SJ_Kg, SJ_Sak, ECMU/SPNU,
+                Petugas, QC, Plat, No Timbangan, Catatan.<br>
+                2. Header di baris pertama akan dilewati.
+            </div>
+            <div class="form-group">
+                <label class="form-label">Pilih File Excel</label>
+                <input type="file" id="f-import-file" accept=".xlsx, .xls" class="form-input" style="padding: 10px;" />
             </div>
             <div class="form-actions">
-                <button type="button" class="btn-sm btn-outline" onclick="unduhTemplate()"
-                    style="flex: none; background: var(--info-bg); color: var(--info-text); border: 0.5px solid var(--info-border);">
+                <button type="button" class="btn-sm btn-outline" onclick="unduhTemplate()">
                     <i class="ti ti-download"></i> Template
                 </button>
                 <button type="button" class="btn-sm btn-outline" onclick="tutupModalImport()">Batal</button>
@@ -1431,11 +1286,11 @@
                 <button class="modal-close" onclick="tutupModalExport()"><i class="ti ti-x"></i></button>
             </div>
             <div style="margin-bottom: 1.25rem;">
-                <p style="font-size: 13px; color: var(--text2); margin-bottom: 1rem;">Pilih data yang ingin diekspor
-                    untuk gudang <strong id="export-gudang-lbl"></strong>:</p>
+                <p style="font-size: 13px; color: var(--text2); margin-bottom: 1rem;">Pilih data untuk gudang <strong
+                        id="export-gudang-lbl"></strong>:</p>
                 <div style="display: flex; flex-direction: column; gap: 10px;">
                     <label
-                        style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; padding: 12px; border: 0.5px solid var(--border); border-radius: var(--radius); transition: background 0.15s;">
+                        style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; padding: 12px; border: 0.5px solid var(--border); border-radius: var(--radius);">
                         <input type="radio" name="export-opt" value="semua" id="opt-semua" checked
                             style="margin-top: 2px; accent-color: #0d9463;">
                         <div>
@@ -1445,7 +1300,7 @@
                         </div>
                     </label>
                     <label
-                        style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; padding: 12px; border: 0.5px solid var(--border); border-radius: var(--radius); transition: background 0.15s;">
+                        style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; padding: 12px; border: 0.5px solid var(--border); border-radius: var(--radius);">
                         <input type="radio" name="export-opt" value="filter" id="opt-filter"
                             style="margin-top: 2px; accent-color: #0d9463;">
                         <div>
@@ -1457,10 +1312,9 @@
                 </div>
             </div>
             <div style="display: flex; gap: 10px;">
-                <button class="btn-sm btn-outline" onclick="tutupModalExport()"
-                    style="flex: 1; justify-content: center;">Batal</button>
+                <button class="btn-sm btn-outline" onclick="tutupModalExport()" style="flex: 1;">Batal</button>
                 <button class="btn-sm" onclick="eksporData()" id="btn-proses-export"
-                    style="flex: 1; justify-content: center; background: #0d9463;">
+                    style="flex: 1; background: #0d9463;">
                     <i class="ti ti-file-spreadsheet"></i> Download Excel
                 </button>
             </div>
@@ -1473,46 +1327,72 @@
     </div>
 
     <script>
-        // URL diambil dari config.js
+        // ============================================================
+        //  KONFIGURASI
+        // ============================================================
         const SCRIPT_URL = typeof CONFIG !== "undefined" ? CONFIG.SCRIPT_URL : "";
 
         let gudangAktif = null;
         let dataBahan = [];
         let page = 1;
         const PER_PAGE = 10;
+        let rawTotalKg = 0;
+        let rawTotalSak = 0;
 
-        // ===== FORMAT ANGKA INDONESIA =====
-        // Titik = pemisah ribuan, Koma = pemisah desimal
-        // Contoh: 25090.5 → "25.090,5" | 1000 → "1.000,0" | 640 → "640"
-
-        function formatLokal(num) {
-            // Untuk angka desimal (Kg), selalu tampilkan minimal 1 desimal
+        // ============================================================
+        //  FORMAT ANGKA INDONESIA
+        // ============================================================
+        function fmtKg(num) {
             const n = parseFloat(num);
-            if (isNaN(n)) return "0,0";
+            if (isNaN(n) || n === 0) return "0";
             return new Intl.NumberFormat('id-ID', {
                 minimumFractionDigits: 1,
                 maximumFractionDigits: 1
             }).format(n);
         }
 
-        function formatLokalInt(num) {
-            // Untuk bilangan bulat (sak, jumlah), tanpa desimal
+        function fmtInt(num) {
             const n = Math.round(parseFloat(num) || 0);
+            if (n === 0) return "0";
             return new Intl.NumberFormat('id-ID', {
                 maximumFractionDigits: 0
             }).format(n);
         }
 
-        function parseLokal(val) {
-            // Parsing input format Indonesia ke number
-            // "25.090,5" → 25090.5 | "1.000" → 1000 | "640" → 640
+        function parseNum(val) {
             if (!val && val !== 0) return 0;
-            let s = val.toString().replace(/[^0-9,\.-]/g, "");
-            s = s.replace(/\./g, "").replace(/,/g, ".");
+            let s = val.toString().trim();
+            if (s === '') return 0;
+            s = s.replace(/\./g, '').replace(/,/g, '.');
             return parseFloat(s) || 0;
         }
 
-        // ===== INIT =====
+        // ============================================================
+        //  ✅ BUG FIX #4: Konversi Excel date serial ke string ISO
+        //  Excel menyimpan tanggal sebagai angka (serial number).
+        //  Contoh: 45678 = tanggal tertentu dihitung dari 1 Jan 1900.
+        // ============================================================
+        function excelDateToISO(val) {
+            if (!val) return "";
+            // Jika sudah berupa string tanggal, kembalikan langsung
+            if (typeof val === 'string' && isNaN(Number(val))) return val;
+            const num = Number(val);
+            if (isNaN(num)) return String(val);
+            // Konversi Excel serial ke JS Date
+            // Excel epoch: 1 Jan 1900 = serial 1, dengan bug leap-year 1900 (serial 60 = 28 Feb 1900, skip 29 Feb)
+            const msPerDay = 86400000;
+            const excelEpoch = new Date(1899, 11, 30); // 30 Des 1899
+            const jsDate = new Date(excelEpoch.getTime() + num * msPerDay);
+            if (isNaN(jsDate.getTime())) return String(val);
+            const yyyy = jsDate.getFullYear();
+            const mm = String(jsDate.getMonth() + 1).padStart(2, '0');
+            const dd = String(jsDate.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
+        }
+
+        // ============================================================
+        //  INIT
+        // ============================================================
         window.addEventListener("DOMContentLoaded", () => {
             muatSummaryKartu();
             initScallingTable();
@@ -1522,11 +1402,9 @@
             for (const g of ["Kalipucang", "Troso"]) {
                 const container = document.getElementById("ws-container-" + g);
                 if (!container) continue;
-
                 try {
                     const data = await apiFetch("GET", g);
                     const summary = {};
-
                     data.forEach(d => {
                         let region = "Lainnya";
                         const n = (d.nama || "").toLowerCase();
@@ -1538,25 +1416,16 @@
                         else if (n.includes("lokal")) region = "Lokal";
                         else if (n.includes("arang kayu")) region = "Arang Kayu";
                         else if (n.includes("residu")) region = "Residu";
-
                         summary[region] = (summary[region] || 0) + 1;
                     });
-
                     let html = "";
                     const order = ["Sumatra", "Sulawesi", "Kalimantan", "Maluku", "Nusa Tenggara", "Lokal", "Arang Kayu", "Residu", "Lainnya"];
-
                     order.forEach(reg => {
                         if (summary[reg]) {
-                            html += `
-                                <div>
-                                    <div class="wstat-val" style="font-size: 14px;">${formatLokalInt(summary[reg])}</div>
-                                    <div class="wstat-lbl">${reg}</div>
-                                </div>
-                            `;
+                            html += `<div><div class="wstat-val" style="font-size: 14px;">${fmtInt(summary[reg])}</div><div class="wstat-lbl">${reg}</div></div>`;
                         }
                     });
-
-                    if (html === "") html = "<div><div class='wstat-lbl'>Belum ada data</div></div>";
+                    if (!html) html = "<div><div class='wstat-lbl'>Belum ada data</div></div>";
                     container.innerHTML = html;
                 } catch (e) {
                     container.innerHTML = "<div><div class='wstat-lbl'>Gagal memuat</div></div>";
@@ -1564,35 +1433,29 @@
             }
         }
 
-        // ===== NAVIGASI =====
+        // ============================================================
+        //  NAVIGASI
+        // ============================================================
         function pilihGudang(id) {
             gudangAktif = id;
-            document
-                .querySelectorAll(".wcard")
-                .forEach((c) => c.classList.remove("sel"));
+            document.querySelectorAll(".wcard").forEach(c => c.classList.remove("sel"));
             document.getElementById("wc-" + id).classList.add("sel");
             const btn = document.getElementById("btn-masuk");
             btn.disabled = false;
             const warna = id === "Kalipucang" ? "#BA7517" : "#0F6E56";
             btn.style.background = warna;
-            document.getElementById("btn-masuk-lbl").textContent =
-                "Masuk ke Gudang " + id;
+            document.getElementById("btn-masuk-lbl").textContent = "Masuk ke Gudang " + id;
         }
 
         async function masuk() {
             if (!gudangAktif) return;
             const isKali = gudangAktif === "Kalipucang";
-            document.getElementById("dash-title").textContent =
-                "Gudang " + gudangAktif;
-            document.getElementById("dash-badge").textContent = isKali
-                ? "Gudang A"
-                : "Gudang B";
+            document.getElementById("dash-title").textContent = "Gudang " + gudangAktif;
+            document.getElementById("dash-badge").textContent = isKali ? "Gudang A" : "Gudang B";
             const badge = document.getElementById("dash-badge");
             badge.style.background = isKali ? "var(--kali-bg)" : "var(--troso-bg)";
             badge.style.color = isKali ? "var(--kali-text)" : "var(--troso-text)";
-            badge.style.borderColor = isKali
-                ? "var(--kali-border)"
-                : "var(--troso-border)";
+            badge.style.borderColor = isKali ? "var(--kali-border)" : "var(--troso-border)";
             document.getElementById("search-input").value = "";
             document.getElementById("filter-kat").value = "";
             page = 1;
@@ -1606,19 +1469,19 @@
         }
 
         function showPage(id) {
-            document
-                .querySelectorAll(".page")
-                .forEach((p) => p.classList.remove("active"));
+            document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
             document.getElementById(id).classList.add("active");
         }
 
-        // ===== API =====
+        // ============================================================
+        //  API
+        // ============================================================
         async function apiFetch(method, gudang, payload) {
             if (!SCRIPT_URL || SCRIPT_URL === "PASTE_APPS_SCRIPT_URL_DI_SINI") {
-                throw new Error("SCRIPT_URL belum dikonfigurasi");
+                throw new Error("SCRIPT_URL belum dikonfigurasi di config.js");
             }
-            const url = new URL(SCRIPT_URL);
             if (method === "GET") {
+                const url = new URL(SCRIPT_URL);
                 url.searchParams.set("gudang", gudang);
                 const res = await fetch(url.toString());
                 const json = await res.json();
@@ -1635,21 +1498,35 @@
             }
         }
 
-        // ===== LOAD DATA =====
+        // ============================================================
+        //  LOAD DATA
+        // ============================================================
         async function muatData() {
             const tbody = document.getElementById("tbl-body");
-            tbody.innerHTML = `<tr><td colspan="10"><div class="loading"><i class="ti ti-loader"></i>Memuat data...</div></td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="11"><div class="loading"><i class="ti ti-loader"></i>Memuat data...</div></td></tr>`;
             try {
                 dataBahan = await apiFetch("GET", gudangAktif);
-                dataBahan.reverse();
+
+                // ✅ BUG FIX #3: Ganti dataBahan.reverse() dengan sort berdasarkan tanggal terbaru.
+                // reverse() hanya membalik urutan dari API (bisa acak), bukan mengurutkan by date.
+                dataBahan.sort((a, b) => {
+                    const da = a.tanggal ? new Date(a.tanggal).getTime() : 0;
+                    const db = b.tanggal ? new Date(b.tanggal).getTime() : 0;
+                    // Jika tanggal sama, urutkan berdasarkan id secara descending (data terbaru duluan)
+                    if (db !== da) return db - da;
+                    return (b.id || "").localeCompare(a.id || "");
+                });
+
                 updateStats();
                 renderTable();
             } catch (e) {
-                tbody.innerHTML = `<tr><td colspan="10"><div class="empty"><i class="ti ti-wifi-off"></i>${e.message.includes("SCRIPT_URL") ? "SCRIPT_URL belum diisi. Lihat panduan setup." : "Gagal memuat data: " + e.message}</div></td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="11"><div class="empty"><i class="ti ti-wifi-off"></i>${e.message.includes("SCRIPT_URL") ? "SCRIPT_URL belum diisi. Lihat panduan setup." : "Gagal memuat data: " + e.message}</div></td></tr>`;
             }
         }
 
-        // ===== STATS =====
+        // ============================================================
+        //  STATS
+        // ============================================================
         function updateStats() {
             const container = document.getElementById("stat-container");
             if (!container) return;
@@ -1667,7 +1544,7 @@
             let html = `
                 <div class="scard" style="border-left: 4px solid var(--text2); background: var(--bg);">
                     <div class="scard-lbl">Total Bongkaran</div>
-                    <div class="scard-val">${formatLokalInt(dataBahan.length)}</div>
+                    <div class="scard-val">${fmtInt(dataBahan.length)}</div>
                 </div>
             `;
 
@@ -1688,11 +1565,11 @@
                 const pb = getPrio(b);
                 if (pa !== pb) return pa - pb;
                 return a.localeCompare(b);
-            }).forEach(nama => {
+            }).slice(0, 5).forEach(nama => {
                 html += `
                     <div class="scard" style="border-left: 4px solid #3b82f6; background: var(--bg);">
-                        <div class="scard-lbl">Stok ${nama}</div>
-                        <div class="scard-val" style="color: #1e40af;">${formatLokal(summary[nama])}</div>
+                        <div class="scard-lbl">${escapeHtml(nama)}</div>
+                        <div class="scard-val" style="color: #1e40af;">${fmtKg(summary[nama])}</div>
                     </div>
                 `;
             });
@@ -1700,13 +1577,14 @@
             container.innerHTML = html;
         }
 
-        // ===== TABLE =====
+        // ============================================================
+        //  TABLE
+        // ============================================================
         function getFiltered() {
             const q = document.getElementById("search-input").value.toLowerCase();
             const k = document.getElementById("filter-kat").value;
-            return dataBahan.filter((d) => {
-                const mq =
-                    !q ||
+            return dataBahan.filter(d => {
+                const mq = !q ||
                     (d.nama && d.nama.toLowerCase().includes(q)) ||
                     (d.id && d.id.toLowerCase().includes(q)) ||
                     (d.supplier && d.supplier.toLowerCase().includes(q)) ||
@@ -1727,27 +1605,6 @@
             return `${dd}/${mm}/${yyyy}`;
         }
 
-        function statusInfo(d) {
-            const p = d.stok / d.min;
-            if (d.stok === 0)
-                return { cls: "badge-danger", icon: "ti-alert-circle", txt: "Habis" };
-            if (p < 1)
-                return { cls: "badge-danger", icon: "ti-alert-triangle", txt: "Kritis" };
-            if (p < 1.5)
-                return { cls: "badge-warn", icon: "ti-alert-triangle", txt: "Menipis" };
-            return { cls: "badge-ok", icon: "ti-circle-check", txt: "Aman" };
-        }
-
-        function barColor(d) {
-            const p = d.stok / d.min;
-            return p < 1 ? "#E24B4A" : p < 1.5 ? "#BA7517" : "#3B6D11";
-        }
-
-        function renderTable() {
-            page = 1;
-            renderPage();
-        }
-
         function hitungSakFromScaling(d) {
             let totalSakRiil = 0;
             try {
@@ -1763,6 +1620,11 @@
             return totalSakRiil;
         }
 
+        function renderTable() {
+            page = 1;
+            renderPage();
+        }
+
         function renderPage() {
             const rows = getFiltered();
             const total = rows.length;
@@ -1772,47 +1634,41 @@
             const tbody = document.getElementById("tbl-body");
 
             if (slice.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="10"><div class="empty"><i class="ti ti-mood-empty"></i>Tidak ada bahan ditemukan</div></td></tr>`;
+                // ✅ BUG FIX #1: Tag pembuka adalah <tr> bukan <td> yang salah di versi asli
+                tbody.innerHTML = `<tr><td colspan="11"><div class="empty"><i class="ti ti-mood-empty"></i>Tidak ada bahan ditemukan</div></td></tr>`;
             } else {
-                tbody.innerHTML = slice
-                    .map((d) => {
-                        const totalSakRiil = hitungSakFromScaling(d);
-                        return `<tr>
-        <td style="color: #0d9463; font-weight: 500;">${esc(d.id)}</td>
-        <td>${esc(formatTanggal(d.tanggal))}</td>
-        <td>${esc(d.nama)} ${d.supplier ? esc(d.supplier) : ""}</td>
-        <td><span style="border: 1px solid var(--border2); padding: 2px 8px; border-radius: 4px; font-size: 11px; white-space: nowrap;">${esc(d.plat || "-")}</span></td>
-        <td><span style="background: #f1f5f9; border: 0.5px solid #cbd5e1; padding: 2px 8px; border-radius: 4px; font-size: 11px; white-space: nowrap;">${esc(d.notimbang || "-")}</span></td>
-        <td><span style="background: #eaf3de; color: #3b6d11; padding: 2px 8px; border-radius: 12px; font-weight: 500; font-size: 11px;">${esc(d.kat || "-")}</span></td>
-        <td style="text-align: right; font-weight: 600;">${d.stok ? formatLokal(d.stok) : "0,0"}</td>
-        <td style="text-align: center;">${totalSakRiil ? formatLokalInt(totalSakRiil) : "-"}</td>
-        <td>${esc(d.petugas || "-")}</td>
-        <td>
-            <div class="act-wrap">
-                <button class="act-btn" style="color: #0d9463" onclick="viewBahan('${esc(d.id)}')" title="Lihat"><i class="ti ti-eye"></i></button>
-                <button class="act-btn" style="color: #e07a2a" onclick="editBahan('${esc(d.id)}')" title="Edit"><i class="ti ti-edit"></i></button>
-                <button class="act-btn" style="color: #d13030" onclick="hapusBahan('${esc(d.id)}')" title="Hapus"><i class="ti ti-trash"></i></button>
-            </div>
-        </td>
-      </tr>`;
-                    })
-                    .join("");
+                tbody.innerHTML = slice.map(d => {
+                    const totalSakRiil = hitungSakFromScaling(d);
+                    return `<tr>
+                        <td style="color: #0d9463; font-weight: 500;">${escapeHtml(d.id)}</td>
+                        <td>${escapeHtml(formatTanggal(d.tanggal))}</td>
+                        <td><strong>${escapeHtml(d.nama)}</strong></td>
+                        <td>${escapeHtml(d.supplier || "-")}</td>
+                        <td><span style="border: 1px solid var(--border2); padding: 2px 8px; border-radius: 4px; font-size: 11px; white-space: nowrap;">${escapeHtml(d.plat || "-")}</span></td>
+                        <td><span style="background: #f1f5f9; border: 0.5px solid #cbd5e1; padding: 2px 8px; border-radius: 4px; font-size: 11px; white-space: nowrap;">${escapeHtml(d.notimbang || "-")}</span></td>
+                        <td><span style="background: #eaf3de; color: #3b6d11; padding: 2px 8px; border-radius: 12px; font-weight: 500; font-size: 11px;">${escapeHtml(d.kat || "-")}</span></td>
+                        <td style="text-align: right; font-weight: 600;">${d.stok ? fmtKg(d.stok) : "0"}</td>
+                        <td style="text-align: center;">${totalSakRiil ? fmtInt(totalSakRiil) : "-"}</td>
+                        <td>${escapeHtml(d.petugas || "-")}</td>
+                        <td>
+                            <div class="act-wrap">
+                                <button class="act-btn" style="color: #0d9463" onclick="viewBahan('${escapeHtml(d.id)}')" title="Lihat"><i class="ti ti-eye"></i></button>
+                                <button class="act-btn" style="color: #e07a2a" onclick="editBahan('${escapeHtml(d.id)}')" title="Edit"><i class="ti ti-edit"></i></button>
+                                <button class="act-btn" style="color: #d13030" onclick="hapusBahan('${escapeHtml(d.id)}')" title="Hapus"><i class="ti ti-trash"></i></button>
+                            </div>
+                        </td>
+                    </tr>`;
+                }).join("");
             }
 
-            document.getElementById("pgn-info").textContent =
-                total === 0
-                    ? "Tidak ada data"
-                    : `Menampilkan ${start + 1}–${end} dari ${formatLokalInt(total)} bahan`;
+            document.getElementById("pgn-info").textContent = total === 0 ? "Tidak ada data" : `Menampilkan ${start + 1}–${end} dari ${fmtInt(total)} bahan`;
 
             const totalPages = Math.ceil(total / PER_PAGE);
             const pgn = document.getElementById("pgn-btns");
             let html = "";
-            if (page > 1)
-                html += `<button class="pgn-btn" onclick="goPage(${page - 1})"><i class="ti ti-chevron-left"></i></button>`;
-            for (let i = 1; i <= totalPages; i++)
-                html += `<button class="pgn-btn${i === page ? " cur" : ""}" onclick="goPage(${i})">${i}</button>`;
-            if (page < totalPages)
-                html += `<button class="pgn-btn" onclick="goPage(${page + 1})"><i class="ti ti-chevron-right"></i></button>`;
+            if (page > 1) html += `<button class="pgn-btn" onclick="goPage(${page - 1})"><i class="ti ti-chevron-left"></i></button>`;
+            for (let i = 1; i <= totalPages; i++) html += `<button class="pgn-btn${i === page ? " cur" : ""}" onclick="goPage(${i})">${i}</button>`;
+            if (page < totalPages) html += `<button class="pgn-btn" onclick="goPage(${page + 1})"><i class="ti ti-chevron-right"></i></button>`;
             pgn.innerHTML = html;
         }
 
@@ -1821,10 +1677,9 @@
             renderPage();
         }
 
-        // ===== MODAL & SCALLING =====
-
-        let rawTotalKg = 0;
-        let rawTotalSak = 0;
+        // ============================================================
+        //  MODAL & SCALLING
+        // ============================================================
 
         function initScallingTable() {
             const tbody = document.getElementById("scalling-body");
@@ -1834,9 +1689,9 @@
                 for (let c = 1; c <= 9; c++) {
                     html += `<td>
                         <div class="cell-wrap">
-                            <input type="text" inputmode="decimal" class="sc-input-kg" data-col="${c}" oninput="hitungScalling()" onblur="formatInputKg(this)" placeholder="-" title="Berat (Kg)">
+                            <input type="text" inputmode="decimal" class="sc-input-kg" data-col="${c}" onfocus="cellFocus(this,'kg')" onblur="cellBlur(this,'kg')" oninput="hitungScalling()" placeholder="-" title="Berat (Kg)">
                             <span class="sep">/</span>
-                            <input type="text" inputmode="numeric" class="sc-input-sak" data-col="${c}" oninput="hitungScalling()" onblur="formatInputSak(this)" placeholder="-" title="Jumlah Sak">
+                            <input type="text" inputmode="numeric" class="sc-input-sak" data-col="${c}" onfocus="cellFocus(this,'int')" onblur="cellBlur(this,'int')" oninput="hitungScalling()" placeholder="-" title="Jumlah Sak">
                         </div>
                     </td>`;
                 }
@@ -1846,23 +1701,16 @@
             document.getElementById("f-tanggal").valueAsDate = new Date();
         }
 
-        // Auto-format saat input kehilangan fokus
-        function formatInputKg(inp) {
-            const val = parseLokal(inp.value);
-            if (val > 0) {
-                inp.value = formatLokal(val);
-            } else if (inp.value !== "") {
-                inp.value = "";
-            }
+        function cellFocus(inp, type) {
+            const val = parseNum(inp.value);
+            if (val !== 0) inp.value = String(val);
+            inp.select();
         }
 
-        function formatInputSak(inp) {
-            const val = parseInt(inp.value.replace(/\./g, "")) || 0;
-            if (val > 0) {
-                inp.value = formatLokalInt(val);
-            } else if (inp.value !== "") {
-                inp.value = "";
-            }
+        function cellBlur(inp, type) {
+            const val = parseNum(inp.value);
+            if (val > 0) inp.value = type === 'kg' ? fmtKg(val) : fmtInt(val);
+            else inp.value = '';
         }
 
         function hitungScalling() {
@@ -1874,62 +1722,50 @@
                 let colSak = 0;
                 const wraps = document.querySelectorAll(`.sc-input-kg[data-col="${c}"]`);
                 wraps.forEach(kgInp => {
-                    const val = parseLokal(kgInp.value);
+                    const val = parseNum(kgInp.value);
                     if (val > 0) {
                         colSum += val;
                         const wrap = kgInp.parentElement;
                         const sakInp = wrap.querySelector('.sc-input-sak');
-                        const sak = parseInt(sakInp.value.replace(/\./g, "")) || 0;
+                        const sak = parseNum(sakInp.value);
                         colSak += sak;
                     }
                 });
-                document.getElementById(`jml-${c}`).textContent = colSum > 0 ? formatLokal(colSum) : "0";
-                document.getElementById(`sak-${c}`).textContent = colSak > 0 ? formatLokalInt(colSak) : "0";
+                document.getElementById(`jml-${c}`).textContent = colSum > 0 ? fmtKg(colSum) : "0";
+                document.getElementById(`sak-${c}`).textContent = colSak > 0 ? fmtInt(colSak) : "0";
                 grandTotal += colSum;
                 grandSak += colSak;
             }
 
             rawTotalKg = grandTotal;
             rawTotalSak = grandSak;
-            document.getElementById("f-jum-total").value = grandTotal > 0 ? formatLokal(grandTotal) : "";
-            document.getElementById("f-sak-total").value = grandSak > 0 ? formatLokalInt(grandSak) : "";
+            document.getElementById("f-jum-total").value = grandTotal > 0 ? fmtKg(grandTotal) : "";
+            document.getElementById("f-sak-total").value = grandSak > 0 ? fmtInt(grandSak) : "";
             hitungSelisih();
         }
 
         function hitungSelisih() {
             const total = rawTotalKg;
-            const sjInputRaw = document.getElementById("f-jum-sj").value;
-            const sj = parseLokal(sjInputRaw);
-
-            if (sjInputRaw !== "" && sjInputRaw.trim() !== "") {
-                const selisih = total - sj;
-                document.getElementById("f-selisih-bongkaran").value = formatLokal(selisih);
+            const sj = parseNum(document.getElementById("f-jum-sj").value);
+            if (document.getElementById("f-jum-sj").value.trim() !== "") {
+                document.getElementById("f-selisih-bongkaran").value = fmtKg(total - sj);
             } else {
                 document.getElementById("f-selisih-bongkaran").value = "";
             }
 
             const sakTotal = rawTotalSak;
-            const sjSakRaw = document.getElementById("f-sak-sj").value;
-            const sakSj = parseLokal(sjSakRaw);
-
-            if (sjSakRaw !== "" && sjSakRaw.trim() !== "") {
-                const selisihSak = sakTotal - sakSj;
-                document.getElementById("f-selisih-sak").value = formatLokalInt(selisihSak);
+            const sakSj = parseNum(document.getElementById("f-sak-sj").value);
+            if (document.getElementById("f-sak-sj").value.trim() !== "") {
+                document.getElementById("f-selisih-sak").value = fmtInt(sakTotal - sakSj);
             } else {
                 document.getElementById("f-selisih-sak").value = "";
             }
         }
 
         function bukaModal(bahan) {
-            const form = document.getElementById("form-scalling");
-            form.reset();
-
-            const inputs = document.querySelectorAll('.sc-input-kg, .sc-input-sak');
-            inputs.forEach(i => i.value = '');
-
-            document.getElementById("modal-judul").textContent = bahan
-                ? "Edit Data Material"
-                : "Form Scalling Material";
+            document.getElementById("form-scalling").reset();
+            document.querySelectorAll('.sc-input-kg, .sc-input-sak').forEach(i => i.value = '');
+            document.getElementById("modal-judul").textContent = bahan ? "Edit Data Material" : "Form Scalling Material";
 
             if (bahan) {
                 document.getElementById("f-is-edit").value = "1";
@@ -1942,17 +1778,7 @@
                 if (bahan.tanggal) {
                     const d = new Date(bahan.tanggal);
                     if (!isNaN(d.getTime())) {
-                        const yyyy = d.getFullYear();
-                        const mm = String(d.getMonth() + 1).padStart(2, '0');
-                        const dd = String(d.getDate()).padStart(2, '0');
-                        document.getElementById("f-tanggal").value = `${yyyy}-${mm}-${dd}`;
-                    } else if (typeof bahan.tanggal === 'string') {
-                        const parts = bahan.tanggal.split('/');
-                        if (parts.length === 3) {
-                            document.getElementById("f-tanggal").value = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
-                        } else {
-                            document.getElementById("f-tanggal").value = "";
-                        }
+                        document.getElementById("f-tanggal").value = d.toISOString().split('T')[0];
                     } else {
                         document.getElementById("f-tanggal").value = "";
                     }
@@ -1960,8 +1786,8 @@
                     document.getElementById("f-tanggal").value = "";
                 }
 
-                document.getElementById("f-jum-sj").value = (bahan.sj_kg !== undefined && bahan.sj_kg !== "") ? formatLokal(bahan.sj_kg) : "";
-                document.getElementById("f-sak-sj").value = (bahan.sj_sak !== undefined && bahan.sj_sak !== "") ? formatLokalInt(bahan.sj_sak) : "";
+                document.getElementById("f-jum-sj").value = (bahan.sj_kg !== undefined && bahan.sj_kg !== "") ? fmtKg(bahan.sj_kg) : "";
+                document.getElementById("f-sak-sj").value = (bahan.sj_sak !== undefined && bahan.sj_sak !== "") ? fmtInt(bahan.sj_sak) : "";
                 document.getElementById("f-ecmu").value = bahan.ecmu || "";
                 document.getElementById("f-petugas").value = bahan.petugas || "";
                 document.getElementById("f-qc").value = bahan.qc || "";
@@ -1969,11 +1795,9 @@
                 document.getElementById("f-plat").value = bahan.plat || "";
 
                 rawTotalKg = parseFloat(bahan.stok) || 0;
-                document.getElementById("f-jum-total").value = rawTotalKg > 0 ? formatLokal(rawTotalKg) : "";
-
-                // Hitung sak total dari scalingData
                 rawTotalSak = hitungSakFromScaling(bahan);
-                document.getElementById("f-sak-total").value = rawTotalSak > 0 ? formatLokalInt(rawTotalSak) : "";
+                document.getElementById("f-jum-total").value = rawTotalKg > 0 ? fmtKg(rawTotalKg) : "";
+                document.getElementById("f-sak-total").value = rawTotalSak > 0 ? fmtInt(rawTotalSak) : "";
 
                 if (bahan.scalingData) {
                     try {
@@ -1987,11 +1811,11 @@
                                     const sakInp = tr.querySelector(`.sc-input-sak[data-col="${col}"]`);
                                     if (kgInp) {
                                         const kgVal = parseFloat(rowData[col].kg) || 0;
-                                        kgInp.value = kgVal > 0 ? formatLokal(kgVal) : "";
+                                        kgInp.value = kgVal > 0 ? fmtKg(kgVal) : "";
                                     }
                                     if (sakInp) {
                                         const sakVal = parseInt(rowData[col].sak) || 0;
-                                        sakInp.value = sakVal > 0 ? formatLokalInt(sakVal) : "";
+                                        sakInp.value = sakVal > 0 ? fmtInt(sakVal) : "";
                                     }
                                 });
                             }
@@ -2001,27 +1825,13 @@
                         console.error("Gagal parse scalingData", e);
                     }
                 }
-
                 hitungSelisih();
             } else {
                 document.getElementById("f-is-edit").value = "";
                 document.getElementById("f-id").value = "";
-                document.getElementById("f-supplier").value = "";
-                document.getElementById("f-kat").value = "";
-                document.getElementById("f-catatan").value = "";
-                document.getElementById("f-tanggal").valueAsDate = new Date();
-
-                document.getElementById("f-jum-sj").value = "";
-                document.getElementById("f-sak-sj").value = "";
-                document.getElementById("f-ecmu").value = "";
-                document.getElementById("f-petugas").value = "";
-                document.getElementById("f-qc").value = "";
-                document.getElementById("f-notimbang").value = "";
-                document.getElementById("f-plat").value = "";
-
                 rawTotalKg = 0;
                 rawTotalSak = 0;
-
+                document.getElementById("f-tanggal").valueAsDate = new Date();
                 hitungScalling();
             }
 
@@ -2037,7 +1847,7 @@
         }
 
         function editBahan(id) {
-            const b = dataBahan.find((d) => d.id === id);
+            const b = dataBahan.find(d => d.id === id);
             if (b) bukaModal(b);
         }
 
@@ -2069,9 +1879,7 @@
                     const parts = item.id.split('-');
                     if (parts.length >= 3) {
                         const seq = parseInt(parts[2], 10);
-                        if (!isNaN(seq) && seq > maxSeq) {
-                            maxSeq = seq;
-                        }
+                        if (!isNaN(seq) && seq > maxSeq) maxSeq = seq;
                     }
                 }
             });
@@ -2080,7 +1888,9 @@
             return `${datePrefix}-${nextSeq}`;
         }
 
-        // ===== SIMPAN =====
+        // ============================================================
+        //  SIMPAN
+        // ============================================================
         async function simpanBahan(e) {
             e.preventDefault();
             const isEdit = !!document.getElementById("f-is-edit").value;
@@ -2099,13 +1909,10 @@
                 const wraps = tr.querySelectorAll('.cell-wrap');
                 wraps.forEach((wrap, idx) => {
                     const col = idx + 1;
-                    const kgRaw = wrap.querySelector('.sc-input-kg').value;
-                    const sakRaw = wrap.querySelector('.sc-input-sak').value;
-                    // Simpan nilai mentah (number), bukan format tampilan
-                    const kgNum = parseLokal(kgRaw);
-                    const sakNum = parseInt(sakRaw.replace(/\./g, "")) || 0;
+                    const kgNum = parseNum(wrap.querySelector('.sc-input-kg').value);
+                    const sakNum = Math.round(parseNum(wrap.querySelector('.sc-input-sak').value));
                     if (kgNum > 0 || sakNum > 0) {
-                        rowObj[col] = { kg: kgNum > 0 ? String(kgNum) : "", sak: sakNum > 0 ? String(sakNum) : "" };
+                        rowObj[col] = { kg: String(kgNum), sak: String(sakNum) };
                         hasData = true;
                     }
                 });
@@ -2121,9 +1928,9 @@
                 stok: totalKg,
                 min: 0,
                 sat: "Kg",
-                tanggal: document.getElementById("f-tanggal").value,
-                sj_kg: parseLokal(document.getElementById("f-jum-sj").value),
-                sj_sak: parseLokal(document.getElementById("f-sak-sj").value),
+                tanggal: tanggal,
+                sj_kg: parseNum(document.getElementById("f-jum-sj").value),
+                sj_sak: parseNum(document.getElementById("f-sak-sj").value),
                 ecmu: document.getElementById("f-ecmu").value,
                 petugas: document.getElementById("f-petugas").value,
                 qc: document.getElementById("f-qc").value,
@@ -2139,9 +1946,7 @@
             try {
                 await apiFetch("POST", gudangAktif, payload);
                 tutupModal();
-                showToast(
-                    isEdit ? "Data berhasil diperbarui" : "Data berhasil ditambahkan",
-                );
+                showToast(isEdit ? "Data berhasil diperbarui" : "Data berhasil ditambahkan");
                 await muatData();
             } catch (err) {
                 showToast("Gagal menyimpan: " + err.message, true);
@@ -2151,24 +1956,25 @@
             }
         }
 
-        // ===== HAPUS =====
+        // ============================================================
+        //  HAPUS
+        // ============================================================
         async function hapusBahan(id) {
             if (!id) return;
             if (!confirm("Apakah Anda yakin ingin menghapus data dengan ID: " + id + "?")) return;
 
             try {
-                const res = await apiFetch("POST", gudangAktif, { action: "delete", id: id });
-                if (res.error) throw new Error(res.error);
-
+                await apiFetch("POST", gudangAktif, { action: "delete", id: id });
                 showToast("Data berhasil dihapus");
                 await muatData();
             } catch (err) {
-                console.error("Hapus Error:", err);
                 showToast("Gagal menghapus: " + err.message, true);
             }
         }
 
-        // ===== TOAST =====
+        // ============================================================
+        //  TOAST
+        // ============================================================
         let toastTimer;
         function showToast(msg, isErr) {
             const el = document.getElementById("toast");
@@ -2181,7 +1987,7 @@
             toastTimer = setTimeout(() => el.classList.remove("show"), 3000);
         }
 
-        function esc(str) {
+        function escapeHtml(str) {
             return String(str)
                 .replace(/&/g, "&amp;")
                 .replace(/</g, "&lt;")
@@ -2189,14 +1995,18 @@
                 .replace(/"/g, "&quot;");
         }
 
-        // ===== IMPORT =====
+        // ============================================================
+        //  IMPORT
+        // ============================================================
         function bukaModalImport() {
             document.getElementById("f-import-file").value = "";
             document.getElementById("modal-import-overlay").classList.add("open");
         }
+
         function tutupModalImport() {
             document.getElementById("modal-import-overlay").classList.remove("open");
         }
+
         async function prosesImport() {
             const fileInp = document.getElementById("f-import-file");
             if (!fileInp.files.length) return showToast("Pilih file!", true);
@@ -2208,136 +2018,24 @@
             reader.onload = async (e) => {
                 try {
                     const data = new Uint8Array(e.target.result);
-                    const wb = XLSX.read(data, { type: 'array', cellDates: true });
+                    const wb = XLSX.read(data, { type: 'array' });
                     const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 });
-                    if (rows.length < 5) throw new Error("Excel tidak valid");
+                    if (rows.length < 2) throw new Error("File kosong");
 
-                    const isCocoFormat = String(rows[0][0] || "").includes("SCALLING RAW MATERIAL");
                     const final = [];
+                    for (let i = 1; i < rows.length; i++) {
+                        const r = rows[i];
+                        if (!r[0]) continue;
 
-                    if (isCocoFormat) {
-                        const head = String(rows[1][0] || "");
-                        let mat = "", sup = "", plat = "", kat = "Fuso";
+                        // ✅ BUG FIX #4: Konversi Excel serial date ke ISO string sebelum digunakan
+                        // Tanggal di Excel disimpan sebagai angka serial, bukan string
+                        const tanggalISO = excelDateToISO(r[4]);
 
-                        const mrMatch = head.match(/^(.+?)\s+Mr\.?\s+(.+)$/i);
-                        if (mrMatch) {
-                            mat = mrMatch[1].trim();
-                            const afterMr = mrMatch[2].trim();
-                            const platMatch = afterMr.match(/^(.+?)\s+(?:PLAT|Plat)\s+(.+)$/i);
-                            if (platMatch) {
-                                sup = "Mr. " + platMatch[1].trim();
-                                plat = platMatch[2].trim();
-                            } else {
-                                sup = "Mr. " + afterMr;
-                            }
-                        } else {
-                            mat = head;
-                        }
-
-                        const katMatch = head.match(/\b(Container\s*\d+\s*(?:ft)?|Fuso|Truck|Pickup|Engkel)\b/i);
-                        if (katMatch) kat = katMatch[1];
-
-                        function findRowByLabel(label) {
-                            for (let i = 0; i < rows.length; i++) {
-                                if (rows[i] && String(rows[i][0] || "").trim().toLowerCase() === label.toLowerCase()) {
-                                    return rows[i];
-                                }
-                            }
-                            return null;
-                        }
-
-                        const tglRow = findRowByLabel("Tanggal Bongkaran");
-                        const stokRow = findRowByLabel("Jumlah Total");
-                        const sjKgRow = findRowByLabel("Jumlah Surat Jalan");
-                        const sjSakRow = findRowByLabel("Jumlah Sak Surat Jalan");
-                        const ecmuRow = findRowByLabel("SPNU") || findRowByLabel("ECMU");
-                        const petRow = findRowByLabel("Petugas Timbang");
-                        const qcRow = findRowByLabel("QC");
-                        const noTimRow = findRowByLabel("Nomor Timbangan");
-
-                        const tglStr = tglRow ? parseExDate(tglRow[4]) : "";
-                        const stok = stokRow ? parseExNum(stokRow[4]) : 0;
-                        const sjKg = sjKgRow ? parseExNum(sjKgRow[4]) : 0;
-                        const sjSak = sjSakRow ? (parseInt(parseExNum(sjSakRow[4])) || 0) : 0;
-                        const ecmu = ecmuRow ? String(ecmuRow[4] || "0") : "0";
-                        const pet = petRow ? String(petRow[4] || "") : "";
-                        const qc = qcRow ? String(qcRow[4] || "") : "";
-                        const noTim = noTimRow ? String(noTimRow[4] || "") : "";
-
-                        const headerRow = rows[3] || [];
-                        const colMap = {};
-                        let mappedAny = false;
-                        for (let i = 1; i < headerRow.length; i++) {
-                            const lbl = String(headerRow[i] || "").trim();
-                            const rawM = lbl.match(/^Raw\s*(\d+)$/i);
-                            if (rawM) {
-                                colMap[i] = parseInt(rawM[1]);
-                                mappedAny = true;
-                            } else if (/rontokan/i.test(lbl)) {
-                                colMap[i] = 9;
-                                mappedAny = true;
-                            }
-                        }
-                        if (!mappedAny) {
-                            for (let i = 1; i <= 9; i++) colMap[i] = i;
-                        }
-
-                        const sakTotRow = findRowByLabel("Sak");
-                        const sakTotPerCol = {};
-                        if (sakTotRow) {
-                            for (const [exCol, slot] of Object.entries(colMap)) {
-                                sakTotPerCol[slot] = parseInt(sakTotRow[parseInt(exCol)]) || 0;
-                            }
-                        }
-
-                        const cellCount = {};
-                        for (let s = 1; s <= 9; s++) cellCount[s] = 0;
-                        for (let r = 4; r < 24; r++) {
-                            const ra = rows[r] || [];
-                            for (const [exCol, slot] of Object.entries(colMap)) {
-                                if (parseExNum(ra[parseInt(exCol)]) > 0) cellCount[slot]++;
-                            }
-                        }
-
-                        const scData = [];
-                        const sakUsed = {};
-                        for (let s = 1; s <= 9; s++) sakUsed[s] = 0;
-
-                        for (let r = 4; r < 24; r++) {
-                            const rowArr = rows[r] || [];
-                            const rowObj = {};
-                            let hasData = false;
-
-                            for (const [exCol, slot] of Object.entries(colMap)) {
-                                const val = parseExNum(rowArr[parseInt(exCol)]);
-                                if (val > 0) {
-                                    const isRontokan = slot === 9;
-                                    const total = sakTotPerCol[slot] || 0;
-                                    const cnt = cellCount[slot] || 1;
-                                    let sak = isRontokan ? 0 : Math.floor(total / cnt);
-                                    sakUsed[slot] += sak;
-                                    if (sakUsed[slot] > total) { sak -= (sakUsed[slot] - total); sakUsed[slot] = total; }
-                                    rowObj[slot] = { kg: String(val), sak: String(sak) };
-                                    hasData = true;
-                                }
-                            }
-                            scData.push(hasData ? rowObj : null);
-                        }
-
-                        const id = generateOtomatisId(mat, tglStr);
+                        const id = generateOtomatisId(String(r[0]), tanggalISO);
                         final.push([
-                            id, mat, kat, stok, 0, "Kg", sup, tglStr, sjKg, sjSak, ecmu, pet, qc, noTim, "", JSON.stringify(scData), plat
+                            id, r[0] || "", r[1] || "", r[2] || 0, 0, "Kg", r[3] || "", tanggalISO, r[5] || 0, r[6] || 0,
+                            r[7] || "", r[8] || "", r[9] || "", r[11] || "", r[12] || "", "", r[10] || ""
                         ]);
-                    } else {
-                        for (let i = 1; i < rows.length; i++) {
-                            const r = rows[i];
-                            if (!r[0]) continue;
-                            const id = generateOtomatisId(String(r[0]), r[4]);
-                            final.push([
-                                id, r[0] || "", r[1] || "", r[2] || 0, 0, "Kg", r[3] || "", r[4] || "", r[5] || 0, r[6] || 0,
-                                r[7] || "", r[8] || "", r[9] || "", r[11] || "", r[12] || "", "", r[10] || ""
-                            ]);
-                        }
                     }
 
                     await apiFetch("POST", gudangAktif, { action: "import", data: final });
@@ -2356,51 +2054,20 @@
 
         function unduhTemplate() {
             const wb = XLSX.utils.book_new();
-            const data = [
-                ["SCALLING RAW MATERIAL PT. COCO RIKI INTERNATIONAL"],
-                ["Sumatra Charcoal Mr. ABROR PLAT B 9573 TYW"],
-                [],
-                ["No.", "Raw 1", "Raw 2", "Raw 3", "Raw 4", "Raw 5", "Raw 6", "Raw 7", "Raw 8", "Rontokan"]
-            ];
-
-            for (let i = 1; i <= 20; i++) {
-                data.push([i, 200.5, 210.1, 195.2, 188.4, 202.3, 199.9, 214.3, 205.7, 55.4]);
-            }
-
-            data.push([]);
-            data.push(["JML", 4010, 4202, 3904, 3768, 4046, 3998, 4286, 4114, 1108]);
-            data.push(["Sak", 80, 80, 80, 80, 80, 80, 80, 80, 0]);
-            data.push([]);
-            data.push([]);
-            data.push(["Tanggal Bongkaran", "", "", ":", "12/05/2026"]);
-            data.push(["Jumlah Total", "", "", ":", 33436, "Kg"]);
-            data.push(["Jumlah Sak Total", "", "", ":", 640, "Sak"]);
-            data.push([]);
-            data.push([]);
-            data.push(["Jumlah Surat Jalan", "", "", ":", 33500, "Kg"]);
-            data.push(["Jumlah Sak Surat Jalan", "", "", ":", 645, "Sak"]);
-            data.push([]);
-            data.push(["Selisih Bongkaran", "", "", ":", -64, "Kg"]);
-            data.push(["Selisih Sak", "", "", ":", -5, "Sak"]);
-            data.push(["SPNU", "", "", ":", "0"]);
-            data.push([]);
-            data.push(["Petugas Timbang", "", "", ":", "Bagus"]);
-            data.push(["QC", "", "", ":", "Narno"]);
-            data.push([]);
-            data.push(["Nomor Timbangan", "", "", ":", "C1"]);
-
-            const ws = XLSX.utils.aoa_to_sheet(data);
-            XLSX.utils.book_append_sheet(wb, ws, "Laporan Scalling");
-            XLSX.writeFile(wb, "Template_Import_CocoRiki.xlsx");
+            const ws = XLSX.utils.aoa_to_sheet([["Nama", "Kategori", "Stok", "Supplier", "Tanggal", "SJ_Kg", "SJ_Sak", "ECMU", "Petugas", "QC", "Plat", "No Timbangan", "Catatan"]]);
+            XLSX.utils.book_append_sheet(wb, ws, "Template");
+            XLSX.writeFile(wb, "Template_Import_StokBahan.xlsx");
         }
 
-        // ===== EXPORT =====
+        // ============================================================
+        //  EXPORT
+        // ============================================================
         function bukaModalExport() {
             const all = dataBahan.length;
             const filtered = getFiltered().length;
             document.getElementById("export-gudang-lbl").textContent = gudangAktif;
-            document.getElementById("opt-semua-lbl").textContent = `${formatLokalInt(all)} data tersedia`;
-            document.getElementById("opt-filter-lbl").textContent = `${formatLokalInt(filtered)} data sesuai filter`;
+            document.getElementById("opt-semua-lbl").textContent = `${fmtInt(all)} data tersedia`;
+            document.getElementById("opt-filter-lbl").textContent = `${fmtInt(filtered)} data sesuai filter`;
             document.getElementById("opt-semua").checked = true;
             document.getElementById("modal-export-overlay").classList.add("open");
         }
@@ -2419,10 +2086,6 @@
             btn.innerHTML = '<i class="ti ti-loader"></i> Memproses...';
 
             try {
-                function hitungTotalSak(d) {
-                    return hitungSakFromScaling(d);
-                }
-
                 const header = [
                     "Kode", "Tanggal", "Material", "Kategori", "Supplier", "Plat",
                     "No. Timbangan", "Berat Total (Kg)", "Jumlah Sak",
@@ -2433,12 +2096,16 @@
                 const sheetData = [header];
 
                 source.forEach(d => {
-                    const totalSak = hitungTotalSak(d);
+                    const totalSak = hitungSakFromScaling(d);
                     const stok = parseFloat(d.stok) || 0;
                     const sjKg = parseFloat(d.sj_kg) || 0;
                     const sjSak = parseInt(d.sj_sak) || 0;
-                    const selisihKg = stok > 0 ? parseFloat((stok - sjKg).toFixed(1)) : "";
-                    const selisihSak = totalSak > 0 ? (totalSak - sjSak) : "";
+
+                    // ✅ BUG FIX #5: Hitung selisih berdasarkan apakah SJ ada,
+                    // bukan berdasarkan apakah totalSak > 0 (yang menyebabkan
+                    // selisih tidak dihitung saat totalSak = 0 tapi sjSak > 0)
+                    const selisihKg = (stok > 0 || sjKg > 0) ? parseFloat((stok - sjKg).toFixed(1)) : "";
+                    const selisihSak = (totalSak > 0 || sjSak > 0) ? (totalSak - sjSak) : "";
 
                     let tglDisplay = d.tanggal || "";
                     if (tglDisplay) {
@@ -2471,17 +2138,6 @@
 
                 const wb = XLSX.utils.book_new();
                 const ws = XLSX.utils.aoa_to_sheet(sheetData);
-
-                const colWidths = header.map((h, i) => {
-                    let max = h.length;
-                    sheetData.slice(1).forEach(row => {
-                        const val = String(row[i] ?? "");
-                        if (val.length > max) max = val.length;
-                    });
-                    return { wch: Math.min(max + 2, 40) };
-                });
-                ws['!cols'] = colWidths;
-
                 XLSX.utils.book_append_sheet(wb, ws, `Data ${gudangAktif}`);
 
                 const now = new Date();
@@ -2489,7 +2145,7 @@
                 const suffix = useFilter ? "_Filter" : "_Semua";
                 XLSX.writeFile(wb, `StokBahan_${gudangAktif}${suffix}_${tglFile}.xlsx`);
 
-                showToast(`${formatLokalInt(source.length)} data berhasil diekspor`);
+                showToast(`${fmtInt(source.length)} data berhasil diekspor`);
                 tutupModalExport();
             } catch (err) {
                 showToast("Gagal ekspor: " + err.message, true);
@@ -2497,37 +2153,6 @@
                 btn.disabled = false;
                 btn.innerHTML = '<i class="ti ti-file-spreadsheet"></i> Download Excel';
             }
-        }
-
-        function parseExDate(val) {
-            if (!val) return "";
-            if (val instanceof Date && !isNaN(val.getTime())) {
-                const yyyy = val.getFullYear();
-                const mm = String(val.getMonth() + 1).padStart(2, '0');
-                const dd = String(val.getDate()).padStart(2, '0');
-                return `${yyyy}-${mm}-${dd}`;
-            }
-            const s = String(val).split(" ")[0];
-            const p = s.split("/");
-            if (p.length === 3) return `${p[2]}-${p[1].padStart(2, '0')}-${p[0].padStart(2, '0')}`;
-            if (typeof val === "number") {
-                const d = new Date(Math.round((val - 25569) * 86400 * 1000));
-                if (!isNaN(d.getTime())) {
-                    const yyyy = d.getFullYear();
-                    const mm = String(d.getMonth() + 1).padStart(2, '0');
-                    const dd = String(d.getDate()).padStart(2, '0');
-                    return `${yyyy}-${mm}-${dd}`;
-                }
-            }
-            return "";
-        }
-
-        function parseExNum(val) {
-            if (typeof val === "number") return val;
-            let s = String(val || "0").replace(/[^\d,.-]/g, "");
-            if (s.includes(",") && s.includes(".")) s = s.replace(/\./g, "").replace(",", ".");
-            else if (s.includes(",")) s = s.replace(",", ".");
-            return parseFloat(s) || 0;
         }
     </script>
 </body>
