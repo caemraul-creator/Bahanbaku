@@ -5,8 +5,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>StokBahan — Manajemen Bahan Baku</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="config.js"></script>
     <style>
         /* ===== RESET & BASE ===== */
@@ -46,8 +50,6 @@
             color: var(--text);
             min-height: 100vh;
         }
-
-        @import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap");
 
         /* ===== LAYOUT ===== */
         .app {
@@ -1180,7 +1182,7 @@
                 <div class="search-wrap" style="flex: 1; min-width: 200px; max-width: 300px; border-color: #c2e2ce;">
                     <i class="ti ti-search" style="color: #a0a09c;"></i>
                     <input type="text" id="search-input" placeholder="Cari kode, supplier, plat..."
-                        oninput="renderTable()" />
+                        oninput="debounceSearch()" />
                 </div>
                 <div class="search-wrap"
                     style="width: auto; min-width: 140px; background: transparent; border-color: #c2e2ce;">
@@ -1488,6 +1490,23 @@
         let page = 1;
         const PER_PAGE = 10;
 
+        // ===== CACHE untuk percepatan =====
+        let _sakCache = new WeakMap();     // Cache hitungSakFromScaling per item
+        const _tglCache = new Map();       // Cache formatTanggal per string
+        const _ldCache = new Map();        // Cache localDate per string
+        let _debounceTimer = null;         // Debounce hitungScalling
+
+        // ===== DATA CACHE (menghindari fetch ulang) =====
+        const _dataCache = {};             // { gudang: { data, timestamp } }
+        const CACHE_TTL = 30 * 1000;      // Cache 30 detik
+
+        // ===== DEBOUNCE SEARCH =====
+        let _searchTimer = null;
+        function debounceSearch() {
+            clearTimeout(_searchTimer);
+            _searchTimer = setTimeout(renderTable, 200);
+        }
+
         // ===== FORMAT ANGKA INDONESIA =====
         function formatLokal(num) {
             const n = parseFloat(num);
@@ -1517,31 +1536,38 @@
         // .getDate() bisa return 11 (minus 1 hari). Helper ini menghindari masalah tersebut.
         function localDate(str) {
             if (!str) return new Date();
+            // Cek cache
+            if (_ldCache.has(str)) return new Date(_ldCache.get(str));
             // Jika ada info waktu/timezone (misal "2026-04-27T17:00:00.000Z"),
             // parse sebagai Date lalu ambil tanggal LOKAL — karena:
             //   2026-04-27T17:00:00Z = 28 April 00:00 di Jakarta (UTC+7)
             // Jika langsung potong string jadi "2026-04-27", tanggalnya salah.
+            let result;
             if (/T\d{2}:\d{2}/.test(str)) {
                 const d = new Date(str);
                 if (!isNaN(d.getTime())) {
-                    // Ambil komponen tanggal lokal, buat Date local midnight
-                    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+                    result = new Date(d.getFullYear(), d.getMonth(), d.getDate());
                 }
             }
-            // Format YYYY-MM-DD tanpa waktu: parse manual sebagai local midnight
-            // (new Date("2026-04-28") di-parse sebagai UTC midnight,
-            //  bisa bergeser di timezone behind UTC)
-            const cleaned = String(str).replace(/T.*/, "").trim();
-            const p = cleaned.split("-");
-            if (p.length === 3 && p[0].length === 4) {
-                return new Date(+p[0], +p[1] - 1, +p[2]);
+            if (!result) {
+                // Format YYYY-MM-DD tanpa waktu: parse manual sebagai local midnight
+                const cleaned = String(str).replace(/T.*/, "").trim();
+                const p = cleaned.split("-");
+                if (p.length === 3 && p[0].length === 4) {
+                    result = new Date(+p[0], +p[1] - 1, +p[2]);
+                }
             }
-            // Fallback: coba parse DD/MM/YYYY
-            const p2 = String(str).split("/");
-            if (p2.length === 3) {
-                return new Date(+p2[2], +p2[1] - 1, +p2[0]);
+            if (!result) {
+                // Fallback: coba parse DD/MM/YYYY
+                const p2 = String(str).split("/");
+                if (p2.length === 3) {
+                    result = new Date(+p2[2], +p2[1] - 1, +p2[0]);
+                }
             }
-            return new Date(str);
+            if (!result) result = new Date(str);
+            // Simpan timestamp ke cache (bukan Date object, agar tidak bermutasi)
+            _ldCache.set(str, result.getTime());
+            return result;
         }
 
         // ===== INIT =====
@@ -1551,49 +1577,46 @@
         });
 
         async function muatSummaryKartu() {
-            for (const g of ["Kalipucang", "Troso"]) {
+            // OPTIMASI: fetch kedua gudang secara parallel (bukan sequential)
+            const gudangs = ["Kalipucang", "Troso"];
+            const results = await Promise.allSettled(
+                gudangs.map(g => apiFetch("GET", g).catch(() => null))
+            );
+
+            gudangs.forEach((g, idx) => {
                 const container = document.getElementById("ws-container-" + g);
-                if (!container) continue;
+                if (!container) return;
 
-                try {
-                    const data = await apiFetch("GET", g);
-                    const summary = {};
-
-                    data.forEach(d => {
-                        let region = "Lainnya";
-                        const n = (d.nama || "").toLowerCase();
-                        if (n.includes("sumatra") || n.includes("sumatera")) region = "Sumatra";
-                        else if (n.includes("sulawesi")) region = "Sulawesi";
-                        else if (n.includes("kalimantan")) region = "Kalimantan";
-                        else if (n.includes("maluku")) region = "Maluku";
-                        else if (n.includes("nusa") || n.includes("tenggara")) region = "Nusa Tenggara";
-                        else if (n.includes("lokal")) region = "Lokal";
-                        else if (n.includes("arang kayu")) region = "Arang Kayu";
-                        else if (n.includes("residu")) region = "Residu";
-
-                        summary[region] = (summary[region] || 0) + 1;
-                    });
-
-                    let html = "";
-                    const order = ["Sumatra", "Sulawesi", "Kalimantan", "Maluku", "Nusa Tenggara", "Lokal", "Arang Kayu", "Residu", "Lainnya"];
-
-                    order.forEach(reg => {
-                        if (summary[reg]) {
-                            html += `
-                                <div>
-                                    <div class="wstat-val" style="font-size: 14px;">${formatLokalInt(summary[reg])}</div>
-                                    <div class="wstat-lbl">${reg}</div>
-                                </div>
-                            `;
-                        }
-                    });
-
-                    if (html === "") html = "<div><div class='wstat-lbl'>Belum ada data</div></div>";
-                    container.innerHTML = html;
-                } catch (e) {
+                const data = results[idx].status === "fulfilled" ? results[idx].value : null;
+                if (!data) {
                     container.innerHTML = "<div><div class='wstat-lbl'>Gagal memuat</div></div>";
+                    return;
                 }
-            }
+
+                const summary = {};
+                data.forEach(d => {
+                    let region = "Lainnya";
+                    const n = (d.nama || "").toLowerCase();
+                    if (n.includes("sumatra") || n.includes("sumatera")) region = "Sumatra";
+                    else if (n.includes("sulawesi")) region = "Sulawesi";
+                    else if (n.includes("kalimantan")) region = "Kalimantan";
+                    else if (n.includes("maluku")) region = "Maluku";
+                    else if (n.includes("nusa") || n.includes("tenggara")) region = "Nusa Tenggara";
+                    else if (n.includes("lokal")) region = "Lokal";
+                    else if (n.includes("arang kayu")) region = "Arang Kayu";
+                    else if (n.includes("residu")) region = "Residu";
+                    summary[region] = (summary[region] || 0) + 1;
+                });
+
+                let html = "";
+                const order = ["Sumatra", "Sulawesi", "Kalimantan", "Maluku", "Nusa Tenggara", "Lokal", "Arang Kayu", "Residu", "Lainnya"];
+                order.forEach(reg => {
+                    if (summary[reg]) {
+                        html += `<div><div class="wstat-val" style="font-size: 14px;">${formatLokalInt(summary[reg])}</div><div class="wstat-lbl">${reg}</div></div>`;
+                    }
+                });
+                container.innerHTML = html || "<div><div class='wstat-lbl'>Belum ada data</div></div>";
+            });
         }
 
         // ===== NAVIGASI =====
@@ -1651,12 +1674,19 @@
             }
             const url = new URL(SCRIPT_URL);
             if (method === "GET") {
+                // Gunakan cache jika masih segar
+                const cached = _dataCache[gudang];
+                if (cached && (Date.now() - cached.timestamp) < CACHE_TTL) {
+                    return cached.data;
+                }
                 url.searchParams.set("gudang", gudang);
                 const res = await fetch(url.toString());
                 const json = await res.json();
                 if (json.error) throw new Error(json.error);
                 return json.data;
             } else {
+                // POST: invalidate cache untuk gudang terkait
+                delete _dataCache[gudang];
                 const res = await fetch(SCRIPT_URL, {
                     method: "POST",
                     body: JSON.stringify({ ...payload, gudang }),
@@ -1668,17 +1698,30 @@
         }
 
         // ===== LOAD DATA =====
-        async function muatData() {
+        async function muatData(forceRefresh) {
             const tbody = document.getElementById("tbl-body");
-            tbody.innerHTML = `<tr><td colspan="10"><div class="loading"><i class="ti ti-loader"></i>Memuat data...</div></td></tr>`;
+
+            // Cek cache dulu
+            const cached = _dataCache[gudangAktif];
+            const useCache = !forceRefresh && cached && (Date.now() - cached.timestamp) < CACHE_TTL;
+
+            if (!useCache) {
+                tbody.innerHTML = `<tr><td colspan="10"><div class="loading"><i class="ti ti-loader"></i>Memuat data...</div></td></tr>`;
+            }
             try {
                 dataBahan = await apiFetch("GET", gudangAktif);
+                // Bersihkan cache saat data baru dimuat
+                _sakCache = new WeakMap();  // WeakMap tidak punya .clear()
+                _tglCache.clear();
+                _ldCache.clear();
+                // Simpan ke data cache
+                _dataCache[gudangAktif] = { data: dataBahan, timestamp: Date.now() };
                 // Sortir berdasarkan tanggal terbaru di atas
+                // OPTIMASI: sort by timestamp number (lebih cepat dari Date object compare)
                 dataBahan.sort((a, b) => {
-                    const da = localDate(a.tanggal);
-                    const db = localDate(b.tanggal);
-                    // Tanggal terbaru di atas; jika sama, bandingkan ID
-                    if (db.getTime() !== da.getTime()) return db.getTime() - da.getTime();
+                    const ta = a.tanggal ? localDate(a.tanggal).getTime() : 0;
+                    const tb = b.tanggal ? localDate(b.tanggal).getTime() : 0;
+                    if (tb !== ta) return tb - ta;
                     return (b.id || "").localeCompare(a.id || "");
                 });
                 updateFilterKategori();
@@ -1777,14 +1820,22 @@
         }
 
         // FIX: gunakan localDate() agar tidak terkena timezone shift
+        // OPTIMASI: cache hasil formatTanggal agar tidak re-parse tiap render
         function formatTanggal(str) {
             if (!str) return "-";
+            if (_tglCache.has(str)) return _tglCache.get(str);
             const d = localDate(str);
-            if (isNaN(d.getTime())) return str;
-            const yyyy = d.getFullYear();
-            const mm = String(d.getMonth() + 1).padStart(2, '0');
-            const dd = String(d.getDate()).padStart(2, '0');
-            return `${dd}/${mm}/${yyyy}`;
+            let result;
+            if (isNaN(d.getTime())) {
+                result = str;
+            } else {
+                const yyyy = d.getFullYear();
+                const mm = String(d.getMonth() + 1).padStart(2, '0');
+                const dd = String(d.getDate()).padStart(2, '0');
+                result = `${dd}/${mm}/${yyyy}`;
+            }
+            _tglCache.set(str, result);
+            return result;
         }
 
         function statusInfo(d) {
@@ -1808,18 +1859,23 @@
             renderPage();
         }
 
+        // OPTIMASI: cache hasil JSON.parse + perhitungan sak per item
         function hitungSakFromScaling(d) {
+            if (_sakCache.has(d)) return _sakCache.get(d);
             let totalSakRiil = 0;
             try {
                 const sData = JSON.parse(d.scalingData || "[]");
-                sData.forEach(row => {
+                for (let i = 0; i < sData.length; i++) {
+                    const row = sData[i];
                     if (row) {
-                        Object.keys(row).forEach(colIdx => {
-                            totalSakRiil += parseInt(row[colIdx].sak) || 0;
-                        });
+                        const keys = Object.keys(row);
+                        for (let j = 0; j < keys.length; j++) {
+                            totalSakRiil += parseInt(row[keys[j]].sak) || 0;
+                        }
                     }
-                });
+                }
             } catch (e) { }
+            _sakCache.set(d, totalSakRiil);
             return totalSakRiil;
         }
 
@@ -1834,12 +1890,14 @@
             if (slice.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="10"><div class="empty"><i class="ti ti-mood-empty"></i>Tidak ada bahan ditemukan</div></td></tr>`;
             } else {
-                tbody.innerHTML = slice
-                    .map((d) => {
-                        const totalSakRiil = hitungSakFromScaling(d);
-                        return `<tr>
+                // OPTIMASI: pre-compute semua data yang dibutuhkan sekali jalan
+                const html = new Array(slice.length);
+                for (let i = 0; i < slice.length; i++) {
+                    const d = slice[i];
+                    const totalSakRiil = hitungSakFromScaling(d);
+                    html[i] = `<tr>
         <td style="color: #0d9463; font-weight: 500;">${esc(d.id)}</td>
-        <td>${esc(formatTanggal(d.tanggal))}</td>
+        <td>${formatTanggal(d.tanggal)}</td>
         <td>${esc(d.nama)} ${d.supplier ? esc(d.supplier) : ""}</td>
         <td><span style="border: 1px solid var(--border2); padding: 2px 8px; border-radius: 4px; font-size: 11px; white-space: nowrap;">${esc(d.plat || "-")}</span></td>
         <td><span style="background: #f1f5f9; border: 0.5px solid #cbd5e1; padding: 2px 8px; border-radius: 4px; font-size: 11px; white-space: nowrap;">${esc(d.notimbang || "-")}</span></td>
@@ -1855,8 +1913,8 @@
             </div>
         </td>
       </tr>`;
-                    })
-                    .join("");
+                }
+                tbody.innerHTML = html.join("");
             }
 
             document.getElementById("pgn-info").textContent =
@@ -1924,15 +1982,25 @@
             }
         }
 
+        // OPTIMASI: debounce hitungScalling agar tidak dijalankan tiap keystroke
         function hitungScalling() {
+            clearTimeout(_debounceTimer);
+            _debounceTimer = setTimeout(_hitungScallingNow, 80);
+        }
+
+        function _hitungScallingNow() {
             let grandTotal = 0;
             let grandSak = 0;
+
+            // OPTIMASI: ambil semua input sekali, buat query per kolom
+            const allKg = document.querySelectorAll('.sc-input-kg');
+            const allSak = document.querySelectorAll('.sc-input-sak');
 
             for (let c = 1; c <= 9; c++) {
                 let colSum = 0;
                 let colSak = 0;
-                const wraps = document.querySelectorAll(`.sc-input-kg[data-col="${c}"]`);
-                wraps.forEach(kgInp => {
+                allKg.forEach(kgInp => {
+                    if (kgInp.dataset.col != c) return;
                     const val = parseLokal(kgInp.value);
                     if (val > 0) {
                         colSum += val;
@@ -2055,7 +2123,7 @@
                                 });
                             }
                         });
-                        hitungScalling();
+                        _hitungScallingNow();
                     } catch (e) {
                         console.error("Gagal parse scalingData", e);
                     }
@@ -2081,7 +2149,7 @@
                 rawTotalKg = 0;
                 rawTotalSak = 0;
 
-                hitungScalling();
+                _hitungScallingNow();
             }
 
             document.getElementById("modal-overlay").classList.add("open");
@@ -2201,7 +2269,7 @@
                 showToast(
                     isEdit ? "Data berhasil diperbarui" : "Data berhasil ditambahkan",
                 );
-                await muatData();
+                await muatData(true);
             } catch (err) {
                 showToast("Gagal menyimpan: " + err.message, true);
             } finally {
@@ -2220,7 +2288,7 @@
                 if (res.error) throw new Error(res.error);
 
                 showToast("Data berhasil dihapus");
-                await muatData();
+                await muatData(true);
             } catch (err) {
                 console.error("Hapus Error:", err);
                 showToast("Gagal menghapus: " + err.message, true);
@@ -2404,7 +2472,7 @@
                     await apiFetch("POST", gudangAktif, { action: "import", data: final });
                     showToast(final.length + " data diimport");
                     tutupModalImport();
-                    muatData();
+                    muatData(true);
                 } catch (err) {
                     showToast(err.message, true);
                 } finally {
