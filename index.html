@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="id">
 
@@ -1681,14 +1682,14 @@
         let perPage = 10;
 
         // ===== CACHE untuk percepatan =====
-        let _sakCache = new WeakMap();     // Cache hitungSakFromScaling per item
-        const _tglCache = new Map();       // Cache formatTanggal per string
-        const _ldCache = new Map();        // Cache localDate per string
-        let _debounceTimer = null;         // Debounce hitungScalling
+        let _sakCache = new WeakMap();
+        const _tglCache = new Map();
+        const _ldCache = new Map();
+        let _debounceTimer = null;
 
-        // ===== DATA CACHE (menghindari fetch ulang) =====
-        const _dataCache = {};             // { gudang: { data, timestamp } }
-        const CACHE_TTL = 30 * 1000;      // Cache 30 detik
+        // ===== DATA CACHE =====
+        const _dataCache = {};
+        const CACHE_TTL = 30 * 1000;
 
         // ===== SORT STATE =====
         let _sortCol = 'tanggal';
@@ -1728,17 +1729,10 @@
             return parseFloat(s) || 0;
         }
 
-        // ===== FIX TIMEZONE: Parse "YYYY-MM-DD" sebagai tanggal LOCAL (bukan UTC) =====
-        // new Date("2026-05-12") → di-parse sebagai UTC midnight → di timezone tertentu
-        // .getDate() bisa return 11 (minus 1 hari). Helper ini menghindari masalah tersebut.
+        // ===== FIX TIMEZONE: Parse "YYYY-MM-DD" sebagai tanggal LOCAL =====
         function localDate(str) {
             if (!str) return new Date();
-            // Cek cache
             if (_ldCache.has(str)) return new Date(_ldCache.get(str));
-            // Jika ada info waktu/timezone (misal "2026-04-27T17:00:00.000Z"),
-            // parse sebagai Date lalu ambil tanggal LOKAL — karena:
-            //   2026-04-27T17:00:00Z = 28 April 00:00 di Jakarta (UTC+7)
-            // Jika langsung potong string jadi "2026-04-27", tanggalnya salah.
             let result;
             if (/T\d{2}:\d{2}/.test(str)) {
                 const d = new Date(str);
@@ -1747,7 +1741,6 @@
                 }
             }
             if (!result) {
-                // Format YYYY-MM-DD tanpa waktu: parse manual sebagai local midnight
                 const cleaned = String(str).replace(/T.*/, "").trim();
                 const p = cleaned.split("-");
                 if (p.length === 3 && p[0].length === 4) {
@@ -1755,14 +1748,12 @@
                 }
             }
             if (!result) {
-                // Fallback: coba parse DD/MM/YYYY
                 const p2 = String(str).split("/");
                 if (p2.length === 3) {
                     result = new Date(+p2[2], +p2[1] - 1, +p2[0]);
                 }
             }
             if (!result) result = new Date(str);
-            // Simpan timestamp ke cache (bukan Date object, agar tidak bermutasi)
             _ldCache.set(str, result.getTime());
             return result;
         }
@@ -1774,7 +1765,6 @@
         });
 
         async function muatSummaryKartu() {
-            // OPTIMASI: fetch kedua gudang secara parallel (bukan sequential)
             const gudangs = ["Kalipucang", "Troso"];
             const results = await Promise.allSettled(
                 gudangs.map(g => apiFetch("GET", g).catch(() => null))
@@ -1871,7 +1861,6 @@
             }
             const url = new URL(SCRIPT_URL);
             if (method === "GET") {
-                // Gunakan cache jika masih segar
                 const cached = _dataCache[gudang];
                 if (cached && (Date.now() - cached.timestamp) < CACHE_TTL) {
                     return cached.data;
@@ -1882,7 +1871,6 @@
                 if (json.error) throw new Error(json.error);
                 return json.data;
             } else {
-                // POST: invalidate cache untuk gudang terkait
                 delete _dataCache[gudang];
                 const res = await fetch(SCRIPT_URL, {
                     method: "POST",
@@ -1898,7 +1886,6 @@
         async function muatData(forceRefresh) {
             const tbody = document.getElementById("tbl-body");
 
-            // Cek cache dulu
             const cached = _dataCache[gudangAktif];
             const useCache = !forceRefresh && cached && (Date.now() - cached.timestamp) < CACHE_TTL;
 
@@ -1907,14 +1894,10 @@
             }
             try {
                 dataBahan = await apiFetch("GET", gudangAktif);
-                // Bersihkan cache saat data baru dimuat
-                _sakCache = new WeakMap();  // WeakMap tidak punya .clear()
+                _sakCache = new WeakMap();
                 _tglCache.clear();
                 _ldCache.clear();
-                // Simpan ke data cache
                 _dataCache[gudangAktif] = { data: dataBahan, timestamp: Date.now() };
-                // Sortir berdasarkan tanggal terbaru di atas
-                // OPTIMASI: sort by timestamp number (lebih cepat dari Date object compare)
                 dataBahan.sort((a, b) => {
                     const ta = a.tanggal ? localDate(a.tanggal).getTime() : 0;
                     const tb = b.tanggal ? localDate(b.tanggal).getTime() : 0;
@@ -1933,10 +1916,8 @@
         function updateFilterKategori() {
             const sel = document.getElementById("filter-kat");
             const currentVal = sel.value;
-            // Kumpulkan kategori unik dari data
             const kats = [...new Set(dataBahan.map(d => d.kat).filter(Boolean))];
             kats.sort();
-            // Rebuild options
             sel.innerHTML = '<option value="">Semua Kategori</option>';
             kats.forEach(k => {
                 const opt = document.createElement("option");
@@ -1944,7 +1925,6 @@
                 opt.textContent = k;
                 sel.appendChild(opt);
             });
-            // Restore selection jika masih valid
             if (kats.includes(currentVal)) sel.value = currentVal;
         }
 
@@ -2026,7 +2006,6 @@
                 return mq && mk && mt;
             });
 
-            // Sort
             result.sort((a, b) => {
                 let va, vb;
                 if (_sortCol === 'tanggal') {
@@ -2056,7 +2035,6 @@
                 _sortCol = col;
                 _sortDir = col === 'tanggal' || col === 'stok' ? 'desc' : 'asc';
             }
-            // Update header classes
             document.querySelectorAll('.th-sort').forEach(th => th.classList.remove('asc', 'desc'));
             const th = document.getElementById('th-' + col);
             if (th) th.classList.add(_sortDir);
@@ -2075,8 +2053,7 @@
             renderPage();
         }
 
-        // FIX: gunakan localDate() agar tidak terkena timezone shift
-        // OPTIMASI: cache hasil formatTanggal agar tidak re-parse tiap render
+        // ===== FORMAT TANGGAL: Selalu tampilkan tanggal sebenarnya =====
         function formatTanggal(str) {
             if (!str) return "-";
             if (_tglCache.has(str)) return _tglCache.get(str);
@@ -2094,6 +2071,7 @@
             return result;
         }
 
+        // ===== PERUBAHAN UTAMA: Selalu tampilkan tanggal, bukan teks relatif =====
         function formatRelativeDate(str) {
             if (!str) return { rel: "-", full: "" };
             const d = localDate(str);
@@ -2102,7 +2080,8 @@
             const mm = String(d.getMonth() + 1).padStart(2, '0');
             const dd = String(d.getDate()).padStart(2, '0');
             const full = `${dd}/${mm}/${yyyy}`;
-            return { rel, full };
+            // Selalu tampilkan tanggal sebenarnya, tanpa teks relatif
+            return { rel: full, full };
         }
 
         function statusInfo(d) {
@@ -2137,7 +2116,6 @@
             } else {
                 btn.classList.remove("visible");
             }
-            // Update header checkbox state
             const cbAll = document.getElementById("cb-all");
             if (!cbAll) return;
             const rows = getFiltered();
@@ -2197,7 +2175,6 @@
             await muatData(true);
         }
 
-        // OPTIMASI: cache hasil JSON.parse + perhitungan sak per item
         function hitungSakFromScaling(d) {
             if (_sakCache.has(d)) return _sakCache.get(d);
             let totalSakRiil = 0;
@@ -2284,7 +2261,6 @@
             if (page > 1)
                 pgnHtml += `<button class="pgn-btn" onclick="goPage(${page - 1})"><i class="ti ti-chevron-left"></i></button>`;
 
-            // Smart pagination: show max 5 page buttons
             const maxPgn = 5;
             let pStart = Math.max(1, page - Math.floor(maxPgn / 2));
             let pEnd = Math.min(totalPages, pStart + maxPgn - 1);
@@ -2349,7 +2325,6 @@
             }
         }
 
-        // OPTIMASI: debounce hitungScalling agar tidak dijalankan tiap keystroke
         function hitungScalling() {
             clearTimeout(_debounceTimer);
             _debounceTimer = setTimeout(_hitungScallingNow, 80);
@@ -2359,7 +2334,6 @@
             let grandTotal = 0;
             let grandSak = 0;
 
-            // OPTIMASI: ambil semua input sekali, buat query per kolom
             const allKg = document.querySelectorAll('.sc-input-kg');
             const allSak = document.querySelectorAll('.sc-input-sak');
 
@@ -2433,7 +2407,6 @@
                 document.getElementById("f-kat").value = bahan.kat || "";
                 document.getElementById("f-catatan").value = bahan.catatan || "";
 
-                // FIX: gunakan localDate() untuk menghindari timezone shift
                 if (bahan.tanggal) {
                     const d = localDate(bahan.tanggal);
                     if (!isNaN(d.getTime())) {
@@ -2521,7 +2494,6 @@
 
             document.getElementById("modal-overlay").classList.add("open");
 
-            // Auto-restore draft if new form (not edit)
             if (!bahan) {
                 try {
                     const draft = JSON.parse(localStorage.getItem("stokbahan_draft") || "null");
@@ -2543,7 +2515,6 @@
                 } catch (e) { }
             }
 
-            // Pasang auto-save listener
             form._draftHandler = function () {
                 if (!document.getElementById("f-is-edit").value) {
                     const fields = ["f-nama", "f-supplier", "f-kat", "f-tanggal", "f-jum-sj", "f-sak-sj",
@@ -2581,7 +2552,6 @@
             editBahan(id);
         }
 
-        // FIX: gunakan localDate() agar ID tidak terkena timezone shift
         function generateOtomatisId(nama, tanggalStr) {
             let prefix = "LK";
             const n = nama.toLowerCase();
@@ -2747,8 +2717,6 @@
             reader.onload = async (e) => {
                 try {
                     const data = new Uint8Array(e.target.result);
-                    // FIX: hapus cellDates: true agar tanggal dibaca sebagai angka (serial Excel)
-                    // dan di-convert manual via parseExDate tanpa terkena timezone shift
                     const wb = XLSX.read(data, { type: 'array' });
                     const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 });
                     if (rows.length < 5) throw new Error("Excel tidak valid");
@@ -2981,7 +2949,6 @@
                     const selisihKg = stok > 0 ? parseFloat((stok - sjKg).toFixed(1)) : "";
                     const selisihSak = totalSak > 0 ? (totalSak - sjSak) : "";
 
-                    // FIX: gunakan localDate() agar export tidak minus 1 hari
                     let tglDisplay = d.tanggal || "";
                     if (tglDisplay) {
                         const dt = localDate(tglDisplay);
@@ -3041,11 +3008,8 @@
             }
         }
 
-        // FIX: parseExDate sekarang menangani serial number Excel secara langsung
-        // karena cellDates:true sudah dihapus. Gunakan UTC methods untuk menghindari timezone shift.
         function parseExDate(val) {
             if (!val) return "";
-            // Jika masih berupa Date object (misal dari sumber lain)
             if (val instanceof Date && !isNaN(val.getTime())) {
                 const yyyy = val.getUTCFullYear();
                 const mm = String(val.getUTCMonth() + 1).padStart(2, '0');
@@ -3055,11 +3019,9 @@
             const s = String(val).split(" ")[0];
             const p = s.split("/");
             if (p.length === 3) return `${p[2]}-${p[1].padStart(2, '0')}-${p[0].padStart(2, '0')}`;
-            // Serial number Excel (tanpa cellDates, tanggal masuk ke sini sebagai angka)
             if (typeof val === "number") {
                 const d = new Date(Math.round((val - 25569) * 86400 * 1000));
                 if (!isNaN(d.getTime())) {
-                    // Gunakan UTC methods agar tidak terkena timezone offset
                     const yyyy = d.getUTCFullYear();
                     const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
                     const dd = String(d.getUTCDate()).padStart(2, '0');
