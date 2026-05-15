@@ -2098,20 +2098,10 @@
             if (!str) return { rel: "-", full: "" };
             const d = localDate(str);
             if (isNaN(d.getTime())) return { rel: str, full: str };
-            const now = new Date();
-            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-            const tgt = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-            const diffMs = today - tgt;
-            const diffDays = Math.round(diffMs / 86400000);
             const yyyy = d.getFullYear();
             const mm = String(d.getMonth() + 1).padStart(2, '0');
             const dd = String(d.getDate()).padStart(2, '0');
             const full = `${dd}/${mm}/${yyyy}`;
-            let rel;
-            if (diffDays === 0) rel = `<span style="color:#0d9463;font-weight:600;">Hari ini</span>`;
-            else if (diffDays === 1) rel = `<span style="color:#0f6e56;">Kemarin</span>`;
-            else if (diffDays <= 7) rel = `<span style="color:#636360;">${diffDays} hari lalu</span>`;
-            else rel = full;
             return { rel, full };
         }
 
