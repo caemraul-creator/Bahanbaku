@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="id">
 
@@ -12,6 +11,11 @@
         href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css" />
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
     <script src="config.js"></script>
     <style>
         /* ===== RESET & BASE ===== */
@@ -126,6 +130,32 @@
             font-weight: 600;
         }
 
+        /* ===== FIREBASE STATUS ===== */
+        .fb-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 20px;
+            margin-left: 10px;
+        }
+
+        .fb-status.ok {
+            background: var(--ok-bg);
+            color: var(--ok-text);
+        }
+
+        .fb-status.off {
+            background: var(--danger-bg);
+            color: var(--danger-text);
+        }
+
+        .fb-status i {
+            font-size: 12px;
+        }
+
         /* ===== PILIH GUDANG ===== */
         .hero h1 {
             font-size: 26px;
@@ -147,7 +177,6 @@
             margin-bottom: 1.25rem;
         }
 
-        /* Gudang Kalipucang — tema Amber */
         :root {
             --kali-bg: #faeeda;
             --kali-bg2: #fdf4e3;
@@ -156,7 +185,6 @@
             --kali-ico: #ba7517;
         }
 
-        /* Gudang Troso — tema Teal */
         :root {
             --troso-bg: #e1f5ee;
             --troso-bg2: #eefaf5;
@@ -1063,7 +1091,6 @@
             user-select: none;
         }
 
-        /* Hilangkan panah number input */
         .scalling-table input[type=number]::-webkit-inner-spin-button,
         .scalling-table input[type=number]::-webkit-outer-spin-button {
             -webkit-appearance: none;
@@ -1267,6 +1294,52 @@
                 min-width: 100%;
             }
         }
+
+        /* ===== MIGRATE BUTTON ===== */
+        .migrate-section {
+            margin-top: 1.25rem;
+            padding: 12px 16px;
+            background: var(--info-bg);
+            border: 0.5px solid var(--info-border);
+            border-radius: var(--radius);
+            font-size: 12px;
+            color: var(--info-text);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .migrate-section i {
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .migrate-btn {
+            padding: 5px 12px;
+            border-radius: var(--radius);
+            border: 0.5px solid var(--info-border);
+            background: var(--bg);
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            color: var(--info-text);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+
+        .migrate-btn:hover {
+            background: var(--info-border);
+            color: white;
+        }
+
+        .migrate-btn:disabled {
+            opacity: 0.5;
+            cursor: default;
+        }
     </style>
 </head>
 
@@ -1278,7 +1351,8 @@
             <div class="brand">
                 <div class="brand-logo"><i class="ti ti-box"></i></div>
                 <div>
-                    <div class="brand-name">StokBahan</div>
+                    <div class="brand-name">StokBahan <span id="fb-badge" class="fb-status off"><i
+                                class="ti ti-cloud-off"></i> Offline</span></div>
                     <div class="brand-sub">Manajemen Bahan Baku</div>
                 </div>
             </div>
@@ -1321,6 +1395,15 @@
                 <i class="ti ti-door-enter"></i>
                 <span id="btn-masuk-lbl">Pilih gudang terlebih dahulu</span>
             </button>
+
+            <!-- Migrasi dari Spreadsheet -->
+            <div class="migrate-section" id="migrate-section" style="display:none;">
+                <i class="ti ti-cloud-upload"></i>
+                <span>Migrasi data dari Spreadsheet ke Firebase agar loading lebih cepat.</span>
+                <button class="migrate-btn" id="btn-migrate" onclick="migrasiDariSpreadsheet()">
+                    <i class="ti ti-database-import"></i> Migrasi
+                </button>
+            </div>
         </div>
 
         <!-- ========== PAGE: DASHBOARD ========== -->
@@ -1355,7 +1438,6 @@
                         <option value="">Semua Kategori</option>
                     </select>
                 </div>
-                <!-- Filter Tanggal Range -->
                 <div class="date-filter-wrap">
                     <i class="ti ti-calendar"></i>
                     <input type="date" id="filter-dari" onchange="renderTable()" title="Dari Tanggal">
@@ -1424,7 +1506,6 @@
             </div>
         </div>
     </div>
-    <!-- .app -->
 
     <!-- ===== MODAL SCALLING / TAMBAH BAHAN ===== -->
     <div class="overlay" id="modal-overlay" onclick="tutupModalOverlay(event)">
@@ -1673,23 +1754,25 @@
     </div>
 
     <script>
-        // URL diambil dari config.js
+        // ============================================================
+        //  KONFIGURASI
+        // ============================================================
+        const FIREBASE_CONFIG = typeof CONFIG !== "undefined" ? CONFIG.firebase : null;
         const SCRIPT_URL = typeof CONFIG !== "undefined" ? CONFIG.SCRIPT_URL : "";
+        const SYNC_TO_SHEET = typeof CONFIG !== "undefined" ? (CONFIG.syncToSheet === true) : false;
+        const ENABLE_OFFLINE = typeof CONFIG !== "undefined" ? (CONFIG.enableOffline !== false) : true;
 
         let gudangAktif = null;
         let dataBahan = [];
         let page = 1;
         let perPage = 10;
 
-        // ===== CACHE untuk percepatan =====
+        // ===== CACHE =====
         let _sakCache = new WeakMap();
         const _tglCache = new Map();
         const _ldCache = new Map();
         let _debounceTimer = null;
-
-        // ===== DATA CACHE =====
-        const _dataCache = {};
-        const CACHE_TTL = 30 * 1000;
+        let _searchTimer = null;
 
         // ===== SORT STATE =====
         let _sortCol = 'tanggal';
@@ -1698,14 +1781,148 @@
         // ===== SELECTION STATE =====
         let _selectedIds = new Set();
 
-        // ===== DEBOUNCE SEARCH =====
-        let _searchTimer = null;
+        // ============================================================
+        //  FIREBASE INIT
+        // ============================================================
+        let db = null;
+        let fbReady = false;
+
+        function initFirebase() {
+            if (!FIREBASE_CONFIG || !FIREBASE_CONFIG.projectId || FIREBASE_CONFIG.projectId.includes("XXXXX")) {
+                console.warn("Firebase belum dikonfigurasi. Menggunakan fallback Apps Script.");
+                return false;
+            }
+            try {
+                firebase.initializeApp(FIREBASE_CONFIG);
+                db = firebase.firestore();
+
+                // Aktifkan offline persistence
+                if (ENABLE_OFFLINE) {
+                    db.enablePersistence({ synchronizeTabs: true }).catch(err => {
+                        if (err.code === 'failed-precondition') {
+                            console.warn('Firestore persistence: Multiple tabs open');
+                        } else if (err.code === 'unimplemented') {
+                            console.warn('Firestore persistence: Browser not supported');
+                        }
+                    });
+                }
+
+                fbReady = true;
+
+                // Update badge
+                const badge = document.getElementById("fb-badge");
+                if (badge) {
+                    badge.className = "fb-status ok";
+                    badge.innerHTML = '<i class="ti ti-cloud"></i> Firebase';
+                }
+
+                return true;
+            } catch (e) {
+                console.error("Firebase init error:", e);
+                return false;
+            }
+        }
+
+        // ============================================================
+        //  FIREBASE DATA OPERATIONS
+        // ============================================================
+        function getItemsRef(gudang) {
+            return db.collection('gudang').doc(gudang).collection('items');
+        }
+
+        async function firebaseGetAll(gudang) {
+            const snapshot = await getItemsRef(gudang).get();
+            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        }
+
+        async function firebaseAdd(gudang, id, data) {
+            await getItemsRef(gudang).doc(id).set({
+                ...data,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        }
+
+        async function firebaseUpdate(gudang, id, data) {
+            await getItemsRef(gudang).doc(id).update({
+                ...data,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        }
+
+        async function firebaseDelete(gudang, id) {
+            await getItemsRef(gudang).doc(id).delete();
+        }
+
+        async function firebaseBatchWrite(gudang, items, mode) {
+            // Firestore limit: 500 operations per batch
+            const BATCH_SIZE = 450;
+            for (let i = 0; i < items.length; i += BATCH_SIZE) {
+                const batch = db.batch();
+                const chunk = items.slice(i, i + BATCH_SIZE);
+                const ref = getItemsRef(gudang);
+                chunk.forEach(item => {
+                    const docRef = ref.doc(item.id);
+                    if (mode === 'delete') {
+                        batch.delete(docRef);
+                    } else {
+                        batch.set(docRef, {
+                            ...item,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                    }
+                });
+                await batch.commit();
+            }
+        }
+
+        // ============================================================
+        //  SPREADSHEET SYNC (fire-and-forget, background)
+        // ============================================================
+        function syncToSheet(gudang, payload) {
+            if (!SCRIPT_URL || SCRIPT_URL === "PASTE_APPS_SCRIPT_URL_DI_SINI" || !SYNC_TO_SHEET) return;
+            fetch(SCRIPT_URL, {
+                method: "POST",
+                body: JSON.stringify({ ...payload, gudang }),
+            }).catch(err => {
+                console.warn("Sync Spreadsheet gagal:", err.message);
+            });
+        }
+
+        // ============================================================
+        //  FALLBACK: APPS SCRIPT (jika Firebase belum dikonfigurasi)
+        // ============================================================
+        async function apiFetch(method, gudang, payload) {
+            if (!SCRIPT_URL || SCRIPT_URL === "PASTE_APPS_SCRIPT_URL_DI_SINI") {
+                throw new Error("SCRIPT_URL belum dikonfigurasi");
+            }
+            const url = new URL(SCRIPT_URL);
+            if (method === "GET") {
+                url.searchParams.set("gudang", gudang);
+                const res = await fetch(url.toString());
+                const json = await res.json();
+                if (json.error) throw new Error(json.error);
+                return json.data;
+            } else {
+                const res = await fetch(SCRIPT_URL, {
+                    method: "POST",
+                    body: JSON.stringify({ ...payload, gudang }),
+                });
+                const json = await res.json();
+                if (json.error) throw new Error(json.error);
+                return json;
+            }
+        }
+
+        // ============================================================
+        //  HELPER FUNCTIONS
+        // ============================================================
         function debounceSearch() {
             clearTimeout(_searchTimer);
             _searchTimer = setTimeout(renderTable, 200);
         }
 
-        // ===== FORMAT ANGKA INDONESIA =====
         function formatLokal(num) {
             const n = parseFloat(num);
             if (isNaN(n)) return "0,0";
@@ -1717,9 +1934,7 @@
 
         function formatLokalInt(num) {
             const n = Math.round(parseFloat(num) || 0);
-            return new Intl.NumberFormat('id-ID', {
-                maximumFractionDigits: 0
-            }).format(n);
+            return new Intl.NumberFormat('id-ID', { maximumFractionDigits: 0 }).format(n);
         }
 
         function parseLokal(val) {
@@ -1729,57 +1944,157 @@
             return parseFloat(s) || 0;
         }
 
-        // ===== FIX TIMEZONE: Parse "YYYY-MM-DD" sebagai tanggal LOCAL =====
         function localDate(str) {
             if (!str) return new Date();
             if (_ldCache.has(str)) return new Date(_ldCache.get(str));
             let result;
             if (/T\d{2}:\d{2}/.test(str)) {
                 const d = new Date(str);
-                if (!isNaN(d.getTime())) {
-                    result = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-                }
+                if (!isNaN(d.getTime())) result = new Date(d.getFullYear(), d.getMonth(), d.getDate());
             }
             if (!result) {
                 const cleaned = String(str).replace(/T.*/, "").trim();
                 const p = cleaned.split("-");
-                if (p.length === 3 && p[0].length === 4) {
-                    result = new Date(+p[0], +p[1] - 1, +p[2]);
-                }
+                if (p.length === 3 && p[0].length === 4) result = new Date(+p[0], +p[1] - 1, +p[2]);
             }
             if (!result) {
                 const p2 = String(str).split("/");
-                if (p2.length === 3) {
-                    result = new Date(+p2[2], +p2[1] - 1, +p2[0]);
-                }
+                if (p2.length === 3) result = new Date(+p2[2], +p2[1] - 1, +p2[0]);
             }
             if (!result) result = new Date(str);
             _ldCache.set(str, result.getTime());
             return result;
         }
 
-        // ===== INIT =====
+        function formatTanggal(str) {
+            if (!str) return "-";
+            if (_tglCache.has(str)) return _tglCache.get(str);
+            const d = localDate(str);
+            let result;
+            if (isNaN(d.getTime())) { result = str; }
+            else {
+                const dd = String(d.getDate()).padStart(2, '0');
+                const mm = String(d.getMonth() + 1).padStart(2, '0');
+                result = `${dd}/${mm}/${d.getFullYear()}`;
+            }
+            _tglCache.set(str, result);
+            return result;
+        }
+
+        // Selalu tampilkan tanggal sebenarnya (bukan teks relatif)
+        function formatRelativeDate(str) {
+            if (!str) return { rel: "-", full: "" };
+            const d = localDate(str);
+            if (isNaN(d.getTime())) return { rel: str, full: str };
+            const dd = String(d.getDate()).padStart(2, '0');
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const full = `${dd}/${mm}/${d.getFullYear()}`;
+            return { rel: full, full };
+        }
+
+        function esc(str) {
+            return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+        }
+
+        // ============================================================
+        //  INIT
+        // ============================================================
         window.addEventListener("DOMContentLoaded", () => {
+            initFirebase();
             muatSummaryKartu();
             initScallingTable();
+
+            // Tampilkan tombol migrasi jika Firebase aktif tapi belum ada data
+            if (fbReady && SCRIPT_URL && SCRIPT_URL !== "PASTE_APPS_SCRIPT_URL_DI_SINI") {
+                document.getElementById("migrate-section").style.display = "flex";
+            }
         });
 
+        // ============================================================
+        //  MIGRASI DARI SPREADSHEET
+        // ============================================================
+        async function migrasiDariSpreadsheet() {
+            if (!fbReady) return showToast("Firebase belum dikonfigurasi!", true);
+            const btn = document.getElementById("btn-migrate");
+            btn.disabled = true;
+            btn.innerHTML = '<i class="ti ti-loader"></i> Migrasi...';
+
+            try {
+                const gudangs = ["Kalipucang", "Troso"];
+                let totalMigrated = 0;
+
+                for (const g of gudangs) {
+                    // 1. Cek apakah Firestore sudah ada data
+                    const existingSnap = await getItemsRef(g).limit(1).get();
+                    if (!existingSnap.empty) {
+                        console.log(`Gudang ${g} sudah ada data di Firebase, skip.`);
+                        continue;
+                    }
+
+                    // 2. Fetch dari Spreadsheet via Apps Script
+                    const sheetData = await apiFetch("GET", g);
+                    if (!sheetData || sheetData.length === 0) continue;
+
+                    // 3. Tulis ke Firestore
+                    const items = sheetData.map(d => ({
+                        id: d.id,
+                        nama: d.nama || "",
+                        supplier: d.supplier || "",
+                        kat: d.kat || "",
+                        stok: parseFloat(d.stok) || 0,
+                        min: parseFloat(d.min) || 0,
+                        sat: d.sat || "Kg",
+                        tanggal: d.tanggal || "",
+                        sj_kg: parseFloat(d.sj_kg) || 0,
+                        sj_sak: parseInt(d.sj_sak) || 0,
+                        ecmu: d.ecmu || "",
+                        petugas: d.petugas || "",
+                        qc: d.qc || "",
+                        notimbang: d.notimbang || "",
+                        plat: d.plat || "",
+                        catatan: d.catatan || "",
+                        scalingData: d.scalingData || "[]"
+                    }));
+
+                    await firebaseBatchWrite(g, items, 'set');
+                    totalMigrated += items.length;
+                }
+
+                if (totalMigrated > 0) {
+                    showToast(`${totalMigrated} data berhasil dimigrasi ke Firebase!`);
+                    document.getElementById("migrate-section").style.display = "none";
+                    muatSummaryKartu();
+                } else {
+                    showToast("Semua data sudah ada di Firebase, tidak perlu migrasi.");
+                    document.getElementById("migrate-section").style.display = "none";
+                }
+            } catch (err) {
+                showToast("Migrasi gagal: " + err.message, true);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="ti ti-database-import"></i> Migrasi';
+            }
+        }
+
+        // ============================================================
+        //  SUMMARY KARTU GUDANG
+        // ============================================================
         async function muatSummaryKartu() {
             const gudangs = ["Kalipucang", "Troso"];
-            const results = await Promise.allSettled(
-                gudangs.map(g => apiFetch("GET", g).catch(() => null))
-            );
+            const fetcher = fbReady
+                ? (g) => firebaseGetAll(g).catch(() => null)
+                : (g) => apiFetch("GET", g).catch(() => null);
+
+            const results = await Promise.allSettled(gudangs.map(fetcher));
 
             gudangs.forEach((g, idx) => {
                 const container = document.getElementById("ws-container-" + g);
                 if (!container) return;
-
                 const data = results[idx].status === "fulfilled" ? results[idx].value : null;
                 if (!data) {
                     container.innerHTML = "<div><div class='wstat-lbl'>Gagal memuat</div></div>";
                     return;
                 }
-
                 const summary = {};
                 data.forEach(d => {
                     let region = "Lainnya";
@@ -1794,47 +2109,37 @@
                     else if (n.includes("residu")) region = "Residu";
                     summary[region] = (summary[region] || 0) + 1;
                 });
-
                 let html = "";
                 const order = ["Sumatra", "Sulawesi", "Kalimantan", "Maluku", "Nusa Tenggara", "Lokal", "Arang Kayu", "Residu", "Lainnya"];
                 order.forEach(reg => {
-                    if (summary[reg]) {
-                        html += `<div><div class="wstat-val" style="font-size: 14px;">${formatLokalInt(summary[reg])}</div><div class="wstat-lbl">${reg}</div></div>`;
-                    }
+                    if (summary[reg]) html += `<div><div class="wstat-val" style="font-size:14px;">${formatLokalInt(summary[reg])}</div><div class="wstat-lbl">${reg}</div></div>`;
                 });
                 container.innerHTML = html || "<div><div class='wstat-lbl'>Belum ada data</div></div>";
             });
         }
 
-        // ===== NAVIGASI =====
+        // ============================================================
+        //  NAVIGASI
+        // ============================================================
         function pilihGudang(id) {
             gudangAktif = id;
-            document
-                .querySelectorAll(".wcard")
-                .forEach((c) => c.classList.remove("sel"));
+            document.querySelectorAll(".wcard").forEach(c => c.classList.remove("sel"));
             document.getElementById("wc-" + id).classList.add("sel");
             const btn = document.getElementById("btn-masuk");
             btn.disabled = false;
-            const warna = id === "Kalipucang" ? "#BA7517" : "#0F6E56";
-            btn.style.background = warna;
-            document.getElementById("btn-masuk-lbl").textContent =
-                "Masuk ke Gudang " + id;
+            btn.style.background = id === "Kalipucang" ? "#BA7517" : "#0F6E56";
+            document.getElementById("btn-masuk-lbl").textContent = "Masuk ke Gudang " + id;
         }
 
         async function masuk() {
             if (!gudangAktif) return;
             const isKali = gudangAktif === "Kalipucang";
-            document.getElementById("dash-title").textContent =
-                "Gudang " + gudangAktif;
-            document.getElementById("dash-badge").textContent = isKali
-                ? "Gudang A"
-                : "Gudang B";
+            document.getElementById("dash-title").textContent = "Gudang " + gudangAktif;
+            document.getElementById("dash-badge").textContent = isKali ? "Gudang A" : "Gudang B";
             const badge = document.getElementById("dash-badge");
             badge.style.background = isKali ? "var(--kali-bg)" : "var(--troso-bg)";
             badge.style.color = isKali ? "var(--kali-text)" : "var(--troso-text)";
-            badge.style.borderColor = isKali
-                ? "var(--kali-border)"
-                : "var(--troso-border)";
+            badge.style.borderColor = isKali ? "var(--kali-border)" : "var(--troso-border)";
             document.getElementById("search-input").value = "";
             document.getElementById("filter-kat").value = "";
             page = 1;
@@ -1848,138 +2153,82 @@
         }
 
         function showPage(id) {
-            document
-                .querySelectorAll(".page")
-                .forEach((p) => p.classList.remove("active"));
+            document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
             document.getElementById(id).classList.add("active");
         }
 
-        // ===== API =====
-        async function apiFetch(method, gudang, payload) {
-            if (!SCRIPT_URL || SCRIPT_URL === "PASTE_APPS_SCRIPT_URL_DI_SINI") {
-                throw new Error("SCRIPT_URL belum dikonfigurasi");
-            }
-            const url = new URL(SCRIPT_URL);
-            if (method === "GET") {
-                const cached = _dataCache[gudang];
-                if (cached && (Date.now() - cached.timestamp) < CACHE_TTL) {
-                    return cached.data;
-                }
-                url.searchParams.set("gudang", gudang);
-                const res = await fetch(url.toString());
-                const json = await res.json();
-                if (json.error) throw new Error(json.error);
-                return json.data;
-            } else {
-                delete _dataCache[gudang];
-                const res = await fetch(SCRIPT_URL, {
-                    method: "POST",
-                    body: JSON.stringify({ ...payload, gudang }),
-                });
-                const json = await res.json();
-                if (json.error) throw new Error(json.error);
-                return json;
-            }
-        }
-
-        // ===== LOAD DATA =====
+        // ============================================================
+        //  LOAD DATA
+        // ============================================================
         async function muatData(forceRefresh) {
             const tbody = document.getElementById("tbl-body");
-
-            const cached = _dataCache[gudangAktif];
-            const useCache = !forceRefresh && cached && (Date.now() - cached.timestamp) < CACHE_TTL;
-
-            if (!useCache) {
-                tbody.innerHTML = `<tr><td colspan="11"><div class="loading"><i class="ti ti-loader"></i>Memuat data...</div></td></tr>`;
-            }
+            tbody.innerHTML = `<tr><td colspan="11"><div class="loading"><i class="ti ti-loader"></i>Memuat data...</div></td></tr>`;
             try {
-                dataBahan = await apiFetch("GET", gudangAktif);
+                if (fbReady) {
+                    dataBahan = await firebaseGetAll(gudangAktif);
+                } else {
+                    dataBahan = await apiFetch("GET", gudangAktif);
+                }
                 _sakCache = new WeakMap();
                 _tglCache.clear();
                 _ldCache.clear();
-                _dataCache[gudangAktif] = { data: dataBahan, timestamp: Date.now() };
+
                 dataBahan.sort((a, b) => {
                     const ta = a.tanggal ? localDate(a.tanggal).getTime() : 0;
                     const tb = b.tanggal ? localDate(b.tanggal).getTime() : 0;
                     if (tb !== ta) return tb - ta;
                     return (b.id || "").localeCompare(a.id || "");
                 });
+
                 updateFilterKategori();
                 updateStats();
                 renderTable();
             } catch (e) {
-                tbody.innerHTML = `<tr><td colspan="11"><div class="empty"><i class="ti ti-wifi-off"></i>${e.message.includes("SCRIPT_URL") ? "SCRIPT_URL belum diisi. Lihat panduan setup." : "Gagal memuat data: " + e.message}<br><button class="retry-btn" onclick="muatData(true)"><i class="ti ti-refresh"></i> Coba Lagi</button></div></td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="11"><div class="empty"><i class="ti ti-wifi-off"></i>${e.message.includes("SCRIPT_URL") ? "Firebase & SCRIPT_URL belum dikonfigurasi." : "Gagal memuat data: " + e.message}<br><button class="retry-btn" onclick="muatData(true)"><i class="ti ti-refresh"></i> Coba Lagi</button></div></td></tr>`;
             }
         }
 
-        // ===== UPDATE FILTER KATEGORI DARI DATA =====
+        // ============================================================
+        //  FILTER KATEGORI
+        // ============================================================
         function updateFilterKategori() {
             const sel = document.getElementById("filter-kat");
             const currentVal = sel.value;
             const kats = [...new Set(dataBahan.map(d => d.kat).filter(Boolean))];
             kats.sort();
             sel.innerHTML = '<option value="">Semua Kategori</option>';
-            kats.forEach(k => {
-                const opt = document.createElement("option");
-                opt.value = k;
-                opt.textContent = k;
-                sel.appendChild(opt);
-            });
+            kats.forEach(k => { const opt = document.createElement("option"); opt.value = k; opt.textContent = k; sel.appendChild(opt); });
             if (kats.includes(currentVal)) sel.value = currentVal;
         }
 
-        // ===== STATS =====
+        // ============================================================
+        //  STATS
+        // ============================================================
         function updateStats() {
             const container = document.getElementById("stat-container");
             if (!container) return;
-
             let totalWeight = 0;
             const summary = {};
-
             dataBahan.forEach(d => {
                 const w = parseFloat(d.stok) || 0;
                 totalWeight += w;
                 const nama = d.nama || "Tanpa Nama";
                 summary[nama] = (summary[nama] || 0) + w;
             });
-
-            let html = `
-                <div class="scard" style="border-left: 4px solid var(--text2); background: var(--bg);">
-                    <div class="scard-lbl">Total Bongkaran</div>
-                    <div class="scard-val">${formatLokalInt(dataBahan.length)}</div>
-                </div>
-            `;
-
+            let html = `<div class="scard" style="border-left:4px solid var(--text2);background:var(--bg);"><div class="scard-lbl">Total Bongkaran</div><div class="scard-val">${formatLokalInt(dataBahan.length)}</div></div>`;
             Object.keys(summary).sort((a, b) => {
-                const getPrio = (name) => {
-                    const n = name.toLowerCase();
-                    if (n.includes("sumatra") || n.includes("sumatera")) return 0;
-                    if (n.includes("sulawesi")) return 1;
-                    if (n.includes("kalimantan")) return 2;
-                    if (n.includes("maluku")) return 3;
-                    if (n.includes("nusa") || n.includes("tenggara")) return 4;
-                    if (n.includes("lokal")) return 5;
-                    if (n.includes("arang kayu")) return 6;
-                    if (n.includes("residu")) return 7;
-                    return 8;
-                };
-                const pa = getPrio(a);
-                const pb = getPrio(b);
-                if (pa !== pb) return pa - pb;
-                return a.localeCompare(b);
+                const getPrio = (n) => { n = n.toLowerCase(); if (n.includes("sumatra") || n.includes("sumatera")) return 0; if (n.includes("sulawesi")) return 1; if (n.includes("kalimantan")) return 2; if (n.includes("maluku")) return 3; if (n.includes("nusa") || n.includes("tenggara")) return 4; if (n.includes("lokal")) return 5; if (n.includes("arang kayu")) return 6; if (n.includes("residu")) return 7; return 8; };
+                const pa = getPrio(a), pb = getPrio(b);
+                return pa !== pb ? pa - pb : a.localeCompare(b);
             }).forEach(nama => {
-                html += `
-                    <div class="scard" style="border-left: 4px solid #3b82f6; background: var(--bg);">
-                        <div class="scard-lbl">Stok ${nama}</div>
-                        <div class="scard-val" style="color: #1e40af;">${formatLokal(summary[nama])}</div>
-                    </div>
-                `;
+                html += `<div class="scard" style="border-left:4px solid #3b82f6;background:var(--bg);"><div class="scard-lbl">Stok ${nama}</div><div class="scard-val" style="color:#1e40af;">${formatLokal(summary[nama])}</div></div>`;
             });
-
             container.innerHTML = html;
         }
 
-        // ===== TABLE =====
+        // ============================================================
+        //  TABLE FILTERING & SORTING
+        // ============================================================
         function getFiltered() {
             const q = document.getElementById("search-input").value.toLowerCase();
             const k = document.getElementById("filter-kat").value;
@@ -1988,53 +2237,28 @@
             const tsDari = dari ? localDate(dari).getTime() : 0;
             const tsSampai = sampai ? localDate(sampai).getTime() + 86400000 - 1 : Infinity;
 
-            let result = dataBahan.filter((d) => {
-                const mq =
-                    !q ||
-                    (d.nama && d.nama.toLowerCase().includes(q)) ||
-                    (d.id && d.id.toLowerCase().includes(q)) ||
-                    (d.supplier && d.supplier.toLowerCase().includes(q)) ||
-                    (d.plat && d.plat.toLowerCase().includes(q)) ||
-                    (d.ecmu && d.ecmu.toLowerCase().includes(q)) ||
-                    (d.notimbang && d.notimbang.toLowerCase().includes(q));
+            let result = dataBahan.filter(d => {
+                const mq = !q || (d.nama && d.nama.toLowerCase().includes(q)) || (d.id && d.id.toLowerCase().includes(q)) || (d.supplier && d.supplier.toLowerCase().includes(q)) || (d.plat && d.plat.toLowerCase().includes(q)) || (d.ecmu && d.ecmu.toLowerCase().includes(q)) || (d.notimbang && d.notimbang.toLowerCase().includes(q));
                 const mk = !k || d.kat === k;
                 let mt = true;
-                if (dari || sampai) {
-                    const ts = d.tanggal ? localDate(d.tanggal).getTime() : 0;
-                    mt = ts >= tsDari && ts <= tsSampai;
-                }
+                if (dari || sampai) { const ts = d.tanggal ? localDate(d.tanggal).getTime() : 0; mt = ts >= tsDari && ts <= tsSampai; }
                 return mq && mk && mt;
             });
 
             result.sort((a, b) => {
                 let va, vb;
-                if (_sortCol === 'tanggal') {
-                    va = a.tanggal ? localDate(a.tanggal).getTime() : 0;
-                    vb = b.tanggal ? localDate(b.tanggal).getTime() : 0;
-                } else if (_sortCol === 'stok') {
-                    va = parseFloat(a.stok) || 0;
-                    vb = parseFloat(b.stok) || 0;
-                } else if (_sortCol === 'nama') {
-                    va = (a.nama || "").toLowerCase();
-                    vb = (b.nama || "").toLowerCase();
-                    return _sortDir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
-                } else {
-                    va = (a[_sortCol] || "").toLowerCase();
-                    vb = (b[_sortCol] || "").toLowerCase();
-                    return _sortDir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
-                }
+                if (_sortCol === 'tanggal') { va = a.tanggal ? localDate(a.tanggal).getTime() : 0; vb = b.tanggal ? localDate(b.tanggal).getTime() : 0; }
+                else if (_sortCol === 'stok') { va = parseFloat(a.stok) || 0; vb = parseFloat(b.stok) || 0; }
+                else if (_sortCol === 'nama') { va = (a.nama || "").toLowerCase(); vb = (b.nama || "").toLowerCase(); return _sortDir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va); }
+                else { va = (a[_sortCol] || "").toLowerCase(); vb = (b[_sortCol] || "").toLowerCase(); return _sortDir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va); }
                 return _sortDir === 'asc' ? va - vb : vb - va;
             });
             return result;
         }
 
         function setSortCol(col) {
-            if (_sortCol === col) {
-                _sortDir = _sortDir === 'asc' ? 'desc' : 'asc';
-            } else {
-                _sortCol = col;
-                _sortDir = col === 'tanggal' || col === 'stok' ? 'desc' : 'asc';
-            }
+            if (_sortCol === col) { _sortDir = _sortDir === 'asc' ? 'desc' : 'asc'; }
+            else { _sortCol = col; _sortDir = col === 'tanggal' || col === 'stok' ? 'desc' : 'asc'; }
             document.querySelectorAll('.th-sort').forEach(th => th.classList.remove('asc', 'desc'));
             const th = document.getElementById('th-' + col);
             if (th) th.classList.add(_sortDir);
@@ -2047,75 +2271,45 @@
             renderTable();
         }
 
-        function ubahPerPage(val) {
-            perPage = parseInt(val) || 10;
-            page = 1;
-            renderPage();
+        function ubahPerPage(val) { perPage = parseInt(val) || 10; page = 1; renderPage(); }
+
+        // ============================================================
+        //  SAK FROM SCALING
+        // ============================================================
+        function hitungSakFromScaling(d) {
+            if (_sakCache.has(d)) return _sakCache.get(d);
+            let totalSakRiil = 0;
+            try {
+                const sData = JSON.parse(d.scalingData || "[]");
+                for (let i = 0; i < sData.length; i++) {
+                    const row = sData[i];
+                    if (row) { const keys = Object.keys(row); for (let j = 0; j < keys.length; j++) { totalSakRiil += parseInt(row[keys[j]].sak) || 0; } }
+                }
+            } catch (e) { }
+            _sakCache.set(d, totalSakRiil);
+            return totalSakRiil;
         }
 
-        // ===== FORMAT TANGGAL: Selalu tampilkan tanggal sebenarnya =====
-        function formatTanggal(str) {
-            if (!str) return "-";
-            if (_tglCache.has(str)) return _tglCache.get(str);
-            const d = localDate(str);
-            let result;
-            if (isNaN(d.getTime())) {
-                result = str;
-            } else {
-                const yyyy = d.getFullYear();
-                const mm = String(d.getMonth() + 1).padStart(2, '0');
-                const dd = String(d.getDate()).padStart(2, '0');
-                result = `${dd}/${mm}/${yyyy}`;
-            }
-            _tglCache.set(str, result);
-            return result;
+        // ============================================================
+        //  HIGHLIGHT
+        // ============================================================
+        function hlText(text, q) {
+            if (!q || !text) return esc(text || "");
+            const safe = esc(text);
+            const safeQ = esc(q).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            return safe.replace(new RegExp(`(${safeQ})`, 'gi'), '<span class="hl">$1</span>');
         }
 
-        // ===== PERUBAHAN UTAMA: Selalu tampilkan tanggal, bukan teks relatif =====
-        function formatRelativeDate(str) {
-            if (!str) return { rel: "-", full: "" };
-            const d = localDate(str);
-            if (isNaN(d.getTime())) return { rel: str, full: str };
-            const yyyy = d.getFullYear();
-            const mm = String(d.getMonth() + 1).padStart(2, '0');
-            const dd = String(d.getDate()).padStart(2, '0');
-            const full = `${dd}/${mm}/${yyyy}`;
-            // Selalu tampilkan tanggal sebenarnya, tanpa teks relatif
-            return { rel: full, full };
-        }
-
-        function statusInfo(d) {
-            const p = d.stok / d.min;
-            if (d.stok === 0)
-                return { cls: "badge-danger", icon: "ti-alert-circle", txt: "Habis" };
-            if (p < 1)
-                return { cls: "badge-danger", icon: "ti-alert-triangle", txt: "Kritis" };
-            if (p < 1.5)
-                return { cls: "badge-warn", icon: "ti-alert-triangle", txt: "Menipis" };
-            return { cls: "badge-ok", icon: "ti-circle-check", txt: "Aman" };
-        }
-
-        function barColor(d) {
-            const p = d.stok / d.min;
-            return p < 1 ? "#E24B4A" : p < 1.5 ? "#BA7517" : "#3B6D11";
-        }
-
-        function renderTable() {
-            page = 1;
-            _selectedIds.clear();
-            _updateBulkBtn();
-            renderPage();
-        }
+        // ============================================================
+        //  RENDER TABLE
+        // ============================================================
+        function renderTable() { page = 1; _selectedIds.clear(); _updateBulkBtn(); renderPage(); }
 
         function _updateBulkBtn() {
             const btn = document.getElementById("btn-bulk-delete");
             const lbl = document.getElementById("bulk-count-lbl");
-            if (_selectedIds.size > 0) {
-                btn.classList.add("visible");
-                lbl.textContent = `Hapus (${_selectedIds.size})`;
-            } else {
-                btn.classList.remove("visible");
-            }
+            if (_selectedIds.size > 0) { btn.classList.add("visible"); lbl.textContent = `Hapus (${_selectedIds.size})`; }
+            else { btn.classList.remove("visible"); }
             const cbAll = document.getElementById("cb-all");
             if (!cbAll) return;
             const rows = getFiltered();
@@ -2129,18 +2323,14 @@
             const rows = getFiltered();
             const visibleIds = rows.slice((page - 1) * perPage, page * perPage).map(d => d.id);
             const allChecked = visibleIds.every(id => _selectedIds.has(id));
-            if (allChecked) {
-                visibleIds.forEach(id => _selectedIds.delete(id));
-            } else {
-                visibleIds.forEach(id => _selectedIds.add(id));
-            }
+            if (allChecked) visibleIds.forEach(id => _selectedIds.delete(id));
+            else visibleIds.forEach(id => _selectedIds.add(id));
             renderPage();
         }
 
         function toggleSelectRow(id, e) {
             e.stopPropagation();
-            if (_selectedIds.has(id)) _selectedIds.delete(id);
-            else _selectedIds.add(id);
+            if (_selectedIds.has(id)) _selectedIds.delete(id); else _selectedIds.add(id);
             _updateBulkBtn();
             const cb = document.querySelector(`input.cb-row[data-id="${CSS.escape(id)}"]`);
             if (cb) cb.checked = _selectedIds.has(id);
@@ -2148,23 +2338,21 @@
             const rows = getFiltered();
             const visibleIds = rows.slice((page - 1) * perPage, page * perPage).map(d => d.id);
             const allChecked = visibleIds.length > 0 && visibleIds.every(i => _selectedIds.has(i));
-            if (cbAll) {
-                cbAll.checked = allChecked;
-                cbAll.indeterminate = !allChecked && visibleIds.some(i => _selectedIds.has(i));
-            }
+            if (cbAll) { cbAll.checked = allChecked; cbAll.indeterminate = !allChecked && visibleIds.some(i => _selectedIds.has(i)); }
         }
 
         async function bulkHapus() {
             if (_selectedIds.size === 0) return;
-            if (!confirm(`Hapus ${_selectedIds.size} data yang dipilih? Tindakan ini tidak dapat dibatalkan.`)) return;
+            if (!confirm(`Hapus ${_selectedIds.size} data yang dipilih?`)) return;
             const ids = [..._selectedIds];
             const btn = document.getElementById("btn-bulk-delete");
             btn.disabled = true;
-            btn.innerHTML = '<i class="ti ti-loader"></i> Menghapus...';
             let sukses = 0, gagal = 0;
             for (const id of ids) {
                 try {
-                    await apiFetch("POST", gudangAktif, { action: "delete", id });
+                    if (fbReady) await firebaseDelete(gudangAktif, id);
+                    else await apiFetch("POST", gudangAktif, { action: "delete", id });
+                    if (SYNC_TO_SHEET) syncToSheet(gudangAktif, { action: "delete", id });
                     sukses++;
                 } catch { gagal++; }
             }
@@ -2175,33 +2363,6 @@
             await muatData(true);
         }
 
-        function hitungSakFromScaling(d) {
-            if (_sakCache.has(d)) return _sakCache.get(d);
-            let totalSakRiil = 0;
-            try {
-                const sData = JSON.parse(d.scalingData || "[]");
-                for (let i = 0; i < sData.length; i++) {
-                    const row = sData[i];
-                    if (row) {
-                        const keys = Object.keys(row);
-                        for (let j = 0; j < keys.length; j++) {
-                            totalSakRiil += parseInt(row[keys[j]].sak) || 0;
-                        }
-                    }
-                }
-            } catch (e) { }
-            _sakCache.set(d, totalSakRiil);
-            return totalSakRiil;
-        }
-
-        // ===== HIGHLIGHT HELPER =====
-        function hlText(text, q) {
-            if (!q || !text) return esc(text || "");
-            const safe = esc(text);
-            const safeQ = esc(q).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            return safe.replace(new RegExp(`(${safeQ})`, 'gi'), '<span class="hl">$1</span>');
-        }
-
         function renderPage() {
             const q = document.getElementById("search-input").value.toLowerCase();
             const rows = getFiltered();
@@ -2210,7 +2371,6 @@
             const end = Math.min(start + perPage, total);
             const slice = rows.slice(start, end);
             const tbody = document.getElementById("tbl-body");
-
 
             if (slice.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="11"><div class="empty"><i class="ti ti-mood-empty"></i>Tidak ada bahan ditemukan</div></td></tr>`;
@@ -2229,20 +2389,20 @@
         <td class="cb-cell" onclick="toggleSelectRow('${safeid}', event)">
             <input type="checkbox" class="cb-row" data-id="${safeid}" ${isSelected ? 'checked' : ''} onclick="toggleSelectRow('${safeid}', event)">
         </td>
-        <td style="color: #0d9463; font-weight: 500;">${idHl}</td>
+        <td style="color:#0d9463;font-weight:500;">${idHl}</td>
         <td title="${full}">${rel}</td>
         <td>${namaHl}${d.supplier ? ' <span style="color:var(--text2);font-size:11px;">— ' + supHl + '</span>' : ''}</td>
-        <td><span style="border: 1px solid var(--border2); padding: 2px 8px; border-radius: 4px; font-size: 11px; white-space: nowrap;">${esc(d.plat || "-")}</span></td>
-        <td><span style="background: #f1f5f9; border: 0.5px solid #cbd5e1; padding: 2px 8px; border-radius: 4px; font-size: 11px; white-space: nowrap;">${esc(d.notimbang || "-")}</span></td>
-        <td><span style="background: #eaf3de; color: #3b6d11; padding: 2px 8px; border-radius: 12px; font-weight: 500; font-size: 11px;">${esc(d.kat || "-")}</span></td>
-        <td style="text-align: right; font-weight: 600;">${d.stok ? formatLokal(d.stok) : "0,0"}</td>
-        <td style="text-align: center;">${totalSakRiil ? formatLokalInt(totalSakRiil) : "-"}</td>
+        <td><span style="border:1px solid var(--border2);padding:2px 8px;border-radius:4px;font-size:11px;white-space:nowrap;">${esc(d.plat || "-")}</span></td>
+        <td><span style="background:#f1f5f9;border:0.5px solid #cbd5e1;padding:2px 8px;border-radius:4px;font-size:11px;white-space:nowrap;">${esc(d.notimbang || "-")}</span></td>
+        <td><span style="background:#eaf3de;color:#3b6d11;padding:2px 8px;border-radius:12px;font-weight:500;font-size:11px;">${esc(d.kat || "-")}</span></td>
+        <td style="text-align:right;font-weight:600;">${d.stok ? formatLokal(d.stok) : "0,0"}</td>
+        <td style="text-align:center;">${totalSakRiil ? formatLokalInt(totalSakRiil) : "-"}</td>
         <td>${esc(d.petugas || "-")}</td>
         <td class="act-cell" onclick="event.stopPropagation()">
             <div class="act-wrap">
-                <button class="act-btn" style="color: #0d9463" onclick="viewBahan('${safeid}')" title="Lihat"><i class="ti ti-eye"></i></button>
-                <button class="act-btn" style="color: #e07a2a" onclick="editBahan('${safeid}')" title="Edit"><i class="ti ti-edit"></i></button>
-                <button class="act-btn" style="color: #d13030" onclick="hapusBahan('${safeid}')" title="Hapus"><i class="ti ti-trash"></i></button>
+                <button class="act-btn" style="color:#0d9463" onclick="viewBahan('${safeid}')" title="Lihat"><i class="ti ti-eye"></i></button>
+                <button class="act-btn" style="color:#e07a2a" onclick="editBahan('${safeid}')" title="Edit"><i class="ti ti-edit"></i></button>
+                <button class="act-btn" style="color:#d13030" onclick="hapusBahan('${safeid}')" title="Hapus"><i class="ti ti-trash"></i></button>
             </div>
         </td>
       </tr>`;
@@ -2250,40 +2410,28 @@
                 tbody.innerHTML = htmlParts.join("");
             }
 
-            document.getElementById("pgn-info").textContent =
-                total === 0
-                    ? "Tidak ada data"
-                    : `Menampilkan ${start + 1}–${end} dari ${formatLokalInt(total)} bongkaran`;
-
+            document.getElementById("pgn-info").textContent = total === 0 ? "Tidak ada data" : `Menampilkan ${start + 1}–${end} dari ${formatLokalInt(total)} bongkaran`;
             const totalPages = Math.ceil(total / perPage);
             const pgn = document.getElementById("pgn-btns");
             let pgnHtml = "";
-            if (page > 1)
-                pgnHtml += `<button class="pgn-btn" onclick="goPage(${page - 1})"><i class="ti ti-chevron-left"></i></button>`;
-
+            if (page > 1) pgnHtml += `<button class="pgn-btn" onclick="goPage(${page - 1})"><i class="ti ti-chevron-left"></i></button>`;
             const maxPgn = 5;
             let pStart = Math.max(1, page - Math.floor(maxPgn / 2));
             let pEnd = Math.min(totalPages, pStart + maxPgn - 1);
             if (pEnd - pStart < maxPgn - 1) pStart = Math.max(1, pEnd - maxPgn + 1);
             if (pStart > 1) pgnHtml += `<button class="pgn-btn" onclick="goPage(1)">1</button><span style="padding:4px 2px;font-size:11px;color:var(--text3);">…</span>`;
-            for (let i = pStart; i <= pEnd; i++)
-                pgnHtml += `<button class="pgn-btn${i === page ? " cur" : ""}" onclick="goPage(${i})">${i}</button>`;
+            for (let i = pStart; i <= pEnd; i++) pgnHtml += `<button class="pgn-btn${i === page ? " cur" : ""}" onclick="goPage(${i})">${i}</button>`;
             if (pEnd < totalPages) pgnHtml += `<span style="padding:4px 2px;font-size:11px;color:var(--text3);">…</span><button class="pgn-btn" onclick="goPage(${totalPages})">${totalPages}</button>`;
-
-            if (page < totalPages)
-                pgnHtml += `<button class="pgn-btn" onclick="goPage(${page + 1})"><i class="ti ti-chevron-right"></i></button>`;
+            if (page < totalPages) pgnHtml += `<button class="pgn-btn" onclick="goPage(${page + 1})"><i class="ti ti-chevron-right"></i></button>`;
             pgn.innerHTML = pgnHtml;
-
             _updateBulkBtn();
         }
 
-        function goPage(p) {
-            page = p;
-            renderPage();
-        }
+        function goPage(p) { page = p; renderPage(); }
 
-        // ===== MODAL & SCALLING =====
-
+        // ============================================================
+        //  MODAL & SCALLING
+        // ============================================================
         let rawTotalKg = 0;
         let rawTotalSak = 0;
 
@@ -2293,13 +2441,7 @@
             for (let i = 1; i <= 20; i++) {
                 html += `<tr><td>${i}</td>`;
                 for (let c = 1; c <= 9; c++) {
-                    html += `<td>
-                        <div class="cell-wrap">
-                            <input type="text" inputmode="decimal" class="sc-input-kg" data-col="${c}" oninput="hitungScalling()" onblur="formatInputKg(this)" placeholder="-" title="Berat (Kg)">
-                            <span class="sep">/</span>
-                            <input type="text" inputmode="numeric" class="sc-input-sak" data-col="${c}" oninput="hitungScalling()" onblur="formatInputSak(this)" placeholder="-" title="Jumlah Sak">
-                        </div>
-                    </td>`;
+                    html += `<td><div class="cell-wrap"><input type="text" inputmode="decimal" class="sc-input-kg" data-col="${c}" oninput="hitungScalling()" onblur="formatInputKg(this)" placeholder="-" title="Berat (Kg)"><span class="sep">/</span><input type="text" inputmode="numeric" class="sc-input-sak" data-col="${c}" oninput="hitungScalling()" onblur="formatInputSak(this)" placeholder="-" title="Jumlah Sak"></div></td>`;
                 }
                 html += `</tr>`;
             }
@@ -2307,56 +2449,26 @@
             document.getElementById("f-tanggal").valueAsDate = new Date();
         }
 
-        function formatInputKg(inp) {
-            const val = parseLokal(inp.value);
-            if (val > 0) {
-                inp.value = formatLokal(val);
-            } else if (inp.value !== "") {
-                inp.value = "";
-            }
-        }
+        function formatInputKg(inp) { const val = parseLokal(inp.value); if (val > 0) inp.value = formatLokal(val); else if (inp.value !== "") inp.value = ""; }
+        function formatInputSak(inp) { const val = parseInt(inp.value.replace(/\./g, "")) || 0; if (val > 0) inp.value = formatLokalInt(val); else if (inp.value !== "") inp.value = ""; }
 
-        function formatInputSak(inp) {
-            const val = parseInt(inp.value.replace(/\./g, "")) || 0;
-            if (val > 0) {
-                inp.value = formatLokalInt(val);
-            } else if (inp.value !== "") {
-                inp.value = "";
-            }
-        }
-
-        function hitungScalling() {
-            clearTimeout(_debounceTimer);
-            _debounceTimer = setTimeout(_hitungScallingNow, 80);
-        }
+        function hitungScalling() { clearTimeout(_debounceTimer); _debounceTimer = setTimeout(_hitungScallingNow, 80); }
 
         function _hitungScallingNow() {
-            let grandTotal = 0;
-            let grandSak = 0;
-
+            let grandTotal = 0, grandSak = 0;
             const allKg = document.querySelectorAll('.sc-input-kg');
-            const allSak = document.querySelectorAll('.sc-input-sak');
-
             for (let c = 1; c <= 9; c++) {
-                let colSum = 0;
-                let colSak = 0;
+                let colSum = 0, colSak = 0;
                 allKg.forEach(kgInp => {
                     if (kgInp.dataset.col != c) return;
                     const val = parseLokal(kgInp.value);
-                    if (val > 0) {
-                        colSum += val;
-                        const wrap = kgInp.parentElement;
-                        const sakInp = wrap.querySelector('.sc-input-sak');
-                        const sak = parseInt(sakInp.value.replace(/\./g, "")) || 0;
-                        colSak += sak;
-                    }
+                    if (val > 0) { colSum += val; const sakInp = kgInp.parentElement.querySelector('.sc-input-sak'); colSak += parseInt(sakInp.value.replace(/\./g, "")) || 0; }
                 });
                 document.getElementById(`jml-${c}`).textContent = colSum > 0 ? formatLokal(colSum) : "0";
                 document.getElementById(`sak-${c}`).textContent = colSak > 0 ? formatLokalInt(colSak) : "0";
                 grandTotal += colSum;
                 grandSak += colSak;
             }
-
             rawTotalKg = grandTotal;
             rawTotalSak = grandSak;
             document.getElementById("f-jum-total").value = grandTotal > 0 ? formatLokal(grandTotal) : "";
@@ -2366,38 +2478,20 @@
 
         function hitungSelisih() {
             const total = rawTotalKg;
-            const sjInputRaw = document.getElementById("f-jum-sj").value;
-            const sj = parseLokal(sjInputRaw);
-
-            if (sjInputRaw !== "" && sjInputRaw.trim() !== "") {
-                const selisih = total - sj;
-                document.getElementById("f-selisih-bongkaran").value = formatLokal(selisih);
-            } else {
-                document.getElementById("f-selisih-bongkaran").value = "";
-            }
-
+            const sjRaw = document.getElementById("f-jum-sj").value;
+            const sj = parseLokal(sjRaw);
+            document.getElementById("f-selisih-bongkaran").value = (sjRaw !== "" && sjRaw.trim() !== "") ? formatLokal(total - sj) : "";
             const sakTotal = rawTotalSak;
             const sjSakRaw = document.getElementById("f-sak-sj").value;
             const sakSj = parseLokal(sjSakRaw);
-
-            if (sjSakRaw !== "" && sjSakRaw.trim() !== "") {
-                const selisihSak = sakTotal - sakSj;
-                document.getElementById("f-selisih-sak").value = formatLokalInt(selisihSak);
-            } else {
-                document.getElementById("f-selisih-sak").value = "";
-            }
+            document.getElementById("f-selisih-sak").value = (sjSakRaw !== "" && sjSakRaw.trim() !== "") ? formatLokalInt(sakTotal - sakSj) : "";
         }
 
         function bukaModal(bahan) {
             const form = document.getElementById("form-scalling");
             form.reset();
-
-            const inputs = document.querySelectorAll('.sc-input-kg, .sc-input-sak');
-            inputs.forEach(i => i.value = '');
-
-            document.getElementById("modal-judul").textContent = bahan
-                ? "Edit Data Material"
-                : "Form Scalling Material";
+            document.querySelectorAll('.sc-input-kg, .sc-input-sak').forEach(i => i.value = '');
+            document.getElementById("modal-judul").textContent = bahan ? "Edit Data Material" : "Form Scalling Material";
 
             if (bahan) {
                 document.getElementById("f-is-edit").value = "1";
@@ -2410,23 +2504,13 @@
                 if (bahan.tanggal) {
                     const d = localDate(bahan.tanggal);
                     if (!isNaN(d.getTime())) {
-                        const yyyy = d.getFullYear();
-                        const mm = String(d.getMonth() + 1).padStart(2, '0');
-                        const dd = String(d.getDate()).padStart(2, '0');
-                        document.getElementById("f-tanggal").value = `${yyyy}-${mm}-${dd}`;
+                        document.getElementById("f-tanggal").value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
                     } else if (typeof bahan.tanggal === 'string') {
                         const parts = bahan.tanggal.split('/');
-                        if (parts.length === 3) {
-                            document.getElementById("f-tanggal").value = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
-                        } else {
-                            document.getElementById("f-tanggal").value = "";
-                        }
-                    } else {
-                        document.getElementById("f-tanggal").value = "";
-                    }
-                } else {
-                    document.getElementById("f-tanggal").value = "";
-                }
+                        if (parts.length === 3) document.getElementById("f-tanggal").value = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                        else document.getElementById("f-tanggal").value = "";
+                    } else document.getElementById("f-tanggal").value = "";
+                } else document.getElementById("f-tanggal").value = "";
 
                 document.getElementById("f-jum-sj").value = (bahan.sj_kg !== undefined && bahan.sj_kg !== "") ? formatLokal(bahan.sj_kg) : "";
                 document.getElementById("f-sak-sj").value = (bahan.sj_sak !== undefined && bahan.sj_sak !== "") ? formatLokalInt(bahan.sj_sak) : "";
@@ -2435,10 +2519,8 @@
                 document.getElementById("f-qc").value = bahan.qc || "";
                 document.getElementById("f-notimbang").value = bahan.notimbang || "";
                 document.getElementById("f-plat").value = bahan.plat || "";
-
                 rawTotalKg = parseFloat(bahan.stok) || 0;
                 document.getElementById("f-jum-total").value = rawTotalKg > 0 ? formatLokal(rawTotalKg) : "";
-
                 rawTotalSak = hitungSakFromScaling(bahan);
                 document.getElementById("f-sak-total").value = rawTotalSak > 0 ? formatLokalInt(rawTotalSak) : "";
 
@@ -2452,23 +2534,14 @@
                                 Object.keys(rowData).forEach(col => {
                                     const kgInp = tr.querySelector(`.sc-input-kg[data-col="${col}"]`);
                                     const sakInp = tr.querySelector(`.sc-input-sak[data-col="${col}"]`);
-                                    if (kgInp) {
-                                        const kgVal = parseFloat(rowData[col].kg) || 0;
-                                        kgInp.value = kgVal > 0 ? formatLokal(kgVal) : "";
-                                    }
-                                    if (sakInp) {
-                                        const sakVal = parseInt(rowData[col].sak) || 0;
-                                        sakInp.value = sakVal > 0 ? formatLokalInt(sakVal) : "";
-                                    }
+                                    if (kgInp) { const v = parseFloat(rowData[col].kg) || 0; kgInp.value = v > 0 ? formatLokal(v) : ""; }
+                                    if (sakInp) { const v = parseInt(rowData[col].sak) || 0; sakInp.value = v > 0 ? formatLokalInt(v) : ""; }
                                 });
                             }
                         });
                         _hitungScallingNow();
-                    } catch (e) {
-                        console.error("Gagal parse scalingData", e);
-                    }
+                    } catch (e) { console.error("Gagal parse scalingData", e); }
                 }
-
                 hitungSelisih();
             } else {
                 document.getElementById("f-is-edit").value = "";
@@ -2477,7 +2550,6 @@
                 document.getElementById("f-kat").value = "";
                 document.getElementById("f-catatan").value = "";
                 document.getElementById("f-tanggal").valueAsDate = new Date();
-
                 document.getElementById("f-jum-sj").value = "";
                 document.getElementById("f-sak-sj").value = "";
                 document.getElementById("f-nokontainer").value = "";
@@ -2485,10 +2557,7 @@
                 document.getElementById("f-qc").value = "";
                 document.getElementById("f-notimbang").value = "";
                 document.getElementById("f-plat").value = "";
-
-                rawTotalKg = 0;
-                rawTotalSak = 0;
-
+                rawTotalKg = 0; rawTotalSak = 0;
                 _hitungScallingNow();
             }
 
@@ -2498,32 +2567,20 @@
                 try {
                     const draft = JSON.parse(localStorage.getItem("stokbahan_draft") || "null");
                     if (draft && draft.gudang === gudangAktif) {
-                        const fields = ["f-nama", "f-supplier", "f-kat", "f-tanggal", "f-jum-sj", "f-sak-sj",
-                            "f-nokontainer", "f-petugas", "f-qc", "f-notimbang", "f-plat", "f-catatan"];
+                        const fields = ["f-nama", "f-supplier", "f-kat", "f-tanggal", "f-jum-sj", "f-sak-sj", "f-nokontainer", "f-petugas", "f-qc", "f-notimbang", "f-plat", "f-catatan"];
                         let restored = false;
-                        fields.forEach(id => {
-                            const el = document.getElementById(id);
-                            if (el && draft[id] !== undefined && draft[id] !== "") {
-                                el.value = draft[id];
-                                restored = true;
-                            }
-                        });
+                        fields.forEach(id => { const el = document.getElementById(id); if (el && draft[id] !== undefined && draft[id] !== "") { el.value = draft[id]; restored = true; } });
                         if (restored) showToast("Draft form dipulihkan", false);
-                        _hitungScallingNow();
-                        hitungSelisih();
+                        _hitungScallingNow(); hitungSelisih();
                     }
                 } catch (e) { }
             }
 
             form._draftHandler = function () {
                 if (!document.getElementById("f-is-edit").value) {
-                    const fields = ["f-nama", "f-supplier", "f-kat", "f-tanggal", "f-jum-sj", "f-sak-sj",
-                        "f-nokontainer", "f-petugas", "f-qc", "f-notimbang", "f-plat", "f-catatan"];
+                    const fields = ["f-nama", "f-supplier", "f-kat", "f-tanggal", "f-jum-sj", "f-sak-sj", "f-nokontainer", "f-petugas", "f-qc", "f-notimbang", "f-plat", "f-catatan"];
                     const draft = { gudang: gudangAktif };
-                    fields.forEach(id => {
-                        const el = document.getElementById(id);
-                        if (el) draft[id] = el.value;
-                    });
+                    fields.forEach(id => { const el = document.getElementById(id); if (el) draft[id] = el.value; });
                     try { localStorage.setItem("stokbahan_draft", JSON.stringify(draft)); } catch (e) { }
                 }
             };
@@ -2533,24 +2590,12 @@
         function tutupModal() {
             document.getElementById("modal-overlay").classList.remove("open");
             const form = document.getElementById("form-scalling");
-            if (form._draftHandler) {
-                form.removeEventListener("input", form._draftHandler);
-                form._draftHandler = null;
-            }
+            if (form._draftHandler) { form.removeEventListener("input", form._draftHandler); form._draftHandler = null; }
         }
 
-        function tutupModalOverlay(e) {
-            if (e.target === document.getElementById("modal-overlay")) tutupModal();
-        }
-
-        function editBahan(id) {
-            const b = dataBahan.find((d) => d.id === id);
-            if (b) bukaModal(b);
-        }
-
-        function viewBahan(id) {
-            editBahan(id);
-        }
+        function tutupModalOverlay(e) { if (e.target === document.getElementById("modal-overlay")) tutupModal(); }
+        function editBahan(id) { const b = dataBahan.find(d => d.id === id); if (b) bukaModal(b); }
+        function viewBahan(id) { editBahan(id); }
 
         function generateOtomatisId(nama, tanggalStr) {
             let prefix = "LK";
@@ -2563,71 +2608,46 @@
             else if (n.includes("arang kayu")) prefix = "AK";
             else if (n.includes("residu")) prefix = "RD";
             else if (n.includes("lokal")) prefix = "LK";
-
             const d = localDate(tanggalStr);
-            const yyyy = d.getFullYear();
-            const mm = String(d.getMonth() + 1).padStart(2, '0');
-            const dd = String(d.getDate()).padStart(2, '0');
-            const datePrefix = `${prefix}-${yyyy}${mm}${dd}`;
-
+            const datePrefix = `${prefix}-${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
             let maxSeq = 0;
-            dataBahan.forEach(item => {
-                if (item.id && item.id.startsWith(datePrefix)) {
-                    const parts = item.id.split('-');
-                    if (parts.length >= 3) {
-                        const seq = parseInt(parts[2], 10);
-                        if (!isNaN(seq) && seq > maxSeq) {
-                            maxSeq = seq;
-                        }
-                    }
-                }
-            });
-
-            const nextSeq = String(maxSeq + 1).padStart(3, '0');
-            return `${datePrefix}-${nextSeq}`;
+            dataBahan.forEach(item => { if (item.id && item.id.startsWith(datePrefix)) { const parts = item.id.split('-'); if (parts.length >= 3) { const seq = parseInt(parts[2], 10); if (!isNaN(seq) && seq > maxSeq) maxSeq = seq; } } });
+            return `${datePrefix}-${String(maxSeq + 1).padStart(3, '0')}`;
         }
 
-        // ===== SIMPAN =====
+        // ============================================================
+        //  SIMPAN BAHAN
+        // ============================================================
         async function simpanBahan(e) {
             e.preventDefault();
             const isEdit = !!document.getElementById("f-is-edit").value;
-            const totalKg = rawTotalKg;
             const customId = document.getElementById("f-id").value.trim();
             const nama = document.getElementById("f-nama").value.trim();
             const tanggal = document.getElementById("f-tanggal").value;
-
             const finalId = isEdit ? customId : generateOtomatisId(nama, tanggal);
 
             const scalingData = [];
-            const tbodyTrs = document.querySelectorAll('#scalling-body tr');
-            tbodyTrs.forEach(tr => {
+            document.querySelectorAll('#scalling-body tr').forEach(tr => {
                 const rowObj = {};
                 let hasData = false;
-                const wraps = tr.querySelectorAll('.cell-wrap');
-                wraps.forEach((wrap, idx) => {
+                tr.querySelectorAll('.cell-wrap').forEach((wrap, idx) => {
                     const col = idx + 1;
-                    const kgRaw = wrap.querySelector('.sc-input-kg').value;
-                    const sakRaw = wrap.querySelector('.sc-input-sak').value;
-                    const kgNum = parseLokal(kgRaw);
-                    const sakNum = parseInt(sakRaw.replace(/\./g, "")) || 0;
-                    if (kgNum > 0 || sakNum > 0) {
-                        rowObj[col] = { kg: kgNum > 0 ? String(kgNum) : "", sak: sakNum > 0 ? String(sakNum) : "" };
-                        hasData = true;
-                    }
+                    const kgNum = parseLokal(wrap.querySelector('.sc-input-kg').value);
+                    const sakNum = parseInt(wrap.querySelector('.sc-input-sak').value.replace(/\./g, "")) || 0;
+                    if (kgNum > 0 || sakNum > 0) { rowObj[col] = { kg: kgNum > 0 ? String(kgNum) : "", sak: sakNum > 0 ? String(sakNum) : "" }; hasData = true; }
                 });
                 scalingData.push(hasData ? rowObj : null);
             });
 
             const payload = {
-                action: isEdit ? "update" : "add",
                 id: finalId,
                 nama: nama,
                 supplier: document.getElementById("f-supplier").value.trim(),
                 kat: document.getElementById("f-kat").value,
-                stok: totalKg,
+                stok: rawTotalKg,
                 min: 0,
                 sat: "Kg",
-                tanggal: document.getElementById("f-tanggal").value,
+                tanggal: tanggal,
                 sj_kg: parseLokal(document.getElementById("f-jum-sj").value),
                 sj_sak: parseLokal(document.getElementById("f-sak-sj").value),
                 ecmu: document.getElementById("f-nokontainer").value,
@@ -2643,14 +2663,23 @@
             btn.disabled = true;
             btn.innerHTML = '<i class="ti ti-loader"></i> Menyimpan...';
             try {
-                await apiFetch("POST", gudangAktif, payload);
-                if (!isEdit) {
-                    try { localStorage.removeItem("stokbahan_draft"); } catch (e) { }
+                // 1. Simpan ke Firebase (utama, cepat)
+                if (fbReady) {
+                    if (isEdit) await firebaseUpdate(gudangAktif, finalId, payload);
+                    else await firebaseAdd(gudangAktif, finalId, payload);
+                } else {
+                    // Fallback ke Apps Script
+                    await apiFetch("POST", gudangAktif, { ...payload, action: isEdit ? "update" : "add", id: finalId });
                 }
+
+                // 2. Sync ke Spreadsheet (background, opsional)
+                if (SYNC_TO_SHEET) {
+                    syncToSheet(gudangAktif, { ...payload, action: isEdit ? "update" : "add", id: finalId });
+                }
+
+                if (!isEdit) { try { localStorage.removeItem("stokbahan_draft"); } catch (e) { } }
                 tutupModal();
-                showToast(
-                    isEdit ? "Data berhasil diperbarui" : "Data berhasil ditambahkan",
-                );
+                showToast(isEdit ? "Data berhasil diperbarui" : "Data berhasil ditambahkan");
                 await muatData(true);
             } catch (err) {
                 showToast("Gagal menyimpan: " + err.message, true);
@@ -2660,24 +2689,26 @@
             }
         }
 
-        // ===== HAPUS =====
+        // ============================================================
+        //  HAPUS BAHAN
+        // ============================================================
         async function hapusBahan(id) {
             if (!id) return;
             if (!confirm("Apakah Anda yakin ingin menghapus data dengan ID: " + id + "?")) return;
-
             try {
-                const res = await apiFetch("POST", gudangAktif, { action: "delete", id: id });
-                if (res.error) throw new Error(res.error);
-
+                if (fbReady) await firebaseDelete(gudangAktif, id);
+                else await apiFetch("POST", gudangAktif, { action: "delete", id });
+                if (SYNC_TO_SHEET) syncToSheet(gudangAktif, { action: "delete", id });
                 showToast("Data berhasil dihapus");
                 await muatData(true);
             } catch (err) {
-                console.error("Hapus Error:", err);
                 showToast("Gagal menghapus: " + err.message, true);
             }
         }
 
-        // ===== TOAST =====
+        // ============================================================
+        //  TOAST
+        // ============================================================
         let toastTimer;
         function showToast(msg, isErr) {
             const el = document.getElementById("toast");
@@ -2690,28 +2721,17 @@
             toastTimer = setTimeout(() => el.classList.remove("show"), 3000);
         }
 
-        function esc(str) {
-            return String(str)
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;");
-        }
+        // ============================================================
+        //  IMPORT
+        // ============================================================
+        function bukaModalImport() { document.getElementById("f-import-file").value = ""; document.getElementById("modal-import-overlay").classList.add("open"); }
+        function tutupModalImport() { document.getElementById("modal-import-overlay").classList.remove("open"); }
 
-        // ===== IMPORT =====
-        function bukaModalImport() {
-            document.getElementById("f-import-file").value = "";
-            document.getElementById("modal-import-overlay").classList.add("open");
-        }
-        function tutupModalImport() {
-            document.getElementById("modal-import-overlay").classList.remove("open");
-        }
         async function prosesImport() {
             const fileInp = document.getElementById("f-import-file");
             if (!fileInp.files.length) return showToast("Pilih file!", true);
             const btn = document.getElementById("btn-proses-import");
-            btn.disabled = true;
-            btn.innerHTML = 'Memproses...';
+            btn.disabled = true; btn.innerHTML = 'Memproses...';
 
             const reader = new FileReader();
             reader.onload = async (e) => {
@@ -2727,39 +2747,18 @@
                     if (isCocoFormat) {
                         const head = String(rows[1][0] || "");
                         let mat = "", sup = "", plat = "", kat = "Fuso";
-
                         const mrMatch = head.match(/^(.+?)\s+Mr\.?\s+(.+)$/i);
-                        if (mrMatch) {
-                            mat = mrMatch[1].trim();
-                            const afterMr = mrMatch[2].trim();
-                            const platMatch = afterMr.match(/^(.+?)\s+(?:PLAT|Plat)\s+(.+)$/i);
-                            if (platMatch) {
-                                sup = "Mr. " + platMatch[1].trim();
-                                plat = platMatch[2].trim();
-                            } else {
-                                sup = "Mr. " + afterMr;
-                            }
-                        } else {
-                            mat = head;
-                        }
-
+                        if (mrMatch) { mat = mrMatch[1].trim(); const afterMr = mrMatch[2].trim(); const platMatch = afterMr.match(/^(.+?)\s+(?:PLAT|Plat)\s+(.+)$/i); if (platMatch) { sup = "Mr. " + platMatch[1].trim(); plat = platMatch[2].trim(); } else { sup = "Mr. " + afterMr; } } else { mat = head; }
                         const katMatch = head.match(/\b(Container\s*\d+\s*(?:ft)?|Fuso|Truck|Pickup|Engkel)\b/i);
                         if (katMatch) kat = katMatch[1];
 
-                        function findRowByLabel(label) {
-                            for (let i = 0; i < rows.length; i++) {
-                                if (rows[i] && String(rows[i][0] || "").trim().toLowerCase() === label.toLowerCase()) {
-                                    return rows[i];
-                                }
-                            }
-                            return null;
-                        }
+                        function findRowByLabel(label) { for (let i = 0; i < rows.length; i++) { if (rows[i] && String(rows[i][0] || "").trim().toLowerCase() === label.toLowerCase()) return rows[i]; } return null; }
 
                         const tglRow = findRowByLabel("Tanggal Bongkaran");
                         const stokRow = findRowByLabel("Jumlah Total");
                         const sjKgRow = findRowByLabel("Jumlah Surat Jalan");
                         const sjSakRow = findRowByLabel("Jumlah Sak Surat Jalan");
-                        const nkRow = findRowByLabel("No. Kontainer") || findRowByLabel("Nomor Kontainer") || findRowByLabel("SPNU") || findRowByLabel("ECMU");
+                        const nkRow = findRowByLabel("No. Kontainer") || findRowByLabel("ECMU");
                         const petRow = findRowByLabel("Petugas Timbang");
                         const qcRow = findRowByLabel("QC");
                         const noTimRow = findRowByLabel("Nomor Timbangan");
@@ -2768,55 +2767,28 @@
                         const stok = stokRow ? parseExNum(stokRow[4]) : 0;
                         const sjKg = sjKgRow ? parseExNum(sjKgRow[4]) : 0;
                         const sjSak = sjSakRow ? (parseInt(parseExNum(sjSakRow[4])) || 0) : 0;
-                        const nokontainer = nkRow ? String(nkRow[4] || "") : "";
-                        const pet = petRow ? String(petRow[4] || "") : "";
-                        const qc = qcRow ? String(qcRow[4] || "") : "";
-                        const noTim = noTimRow ? String(noTimRow[4] || "") : "";
 
                         const headerRow = rows[3] || [];
                         const colMap = {};
                         let mappedAny = false;
-                        for (let i = 1; i < headerRow.length; i++) {
-                            const lbl = String(headerRow[i] || "").trim();
-                            const rawM = lbl.match(/^Raw\s*(\d+)$/i);
-                            if (rawM) {
-                                colMap[i] = parseInt(rawM[1]);
-                                mappedAny = true;
-                            } else if (/rontokan/i.test(lbl)) {
-                                colMap[i] = 9;
-                                mappedAny = true;
-                            }
-                        }
-                        if (!mappedAny) {
-                            for (let i = 1; i <= 9; i++) colMap[i] = i;
-                        }
+                        for (let i = 1; i < headerRow.length; i++) { const lbl = String(headerRow[i] || "").trim(); const rawM = lbl.match(/^Raw\s*(\d+)$/i); if (rawM) { colMap[i] = parseInt(rawM[1]); mappedAny = true; } else if (/rontokan/i.test(lbl)) { colMap[i] = 9; mappedAny = true; } }
+                        if (!mappedAny) for (let i = 1; i <= 9; i++) colMap[i] = i;
 
                         const sakTotRow = findRowByLabel("Sak");
                         const sakTotPerCol = {};
-                        if (sakTotRow) {
-                            for (const [exCol, slot] of Object.entries(colMap)) {
-                                sakTotPerCol[slot] = parseInt(sakTotRow[parseInt(exCol)]) || 0;
-                            }
-                        }
+                        if (sakTotRow) for (const [exCol, slot] of Object.entries(colMap)) sakTotPerCol[slot] = parseInt(sakTotRow[parseInt(exCol)]) || 0;
 
                         const cellCount = {};
                         for (let s = 1; s <= 9; s++) cellCount[s] = 0;
-                        for (let r = 4; r < 24; r++) {
-                            const ra = rows[r] || [];
-                            for (const [exCol, slot] of Object.entries(colMap)) {
-                                if (parseExNum(ra[parseInt(exCol)]) > 0) cellCount[slot]++;
-                            }
-                        }
+                        for (let r = 4; r < 24; r++) { const ra = rows[r] || []; for (const [exCol, slot] of Object.entries(colMap)) { if (parseExNum(ra[parseInt(exCol)]) > 0) cellCount[slot]++; } }
 
                         const scData = [];
                         const sakUsed = {};
                         for (let s = 1; s <= 9; s++) sakUsed[s] = 0;
-
                         for (let r = 4; r < 24; r++) {
                             const rowArr = rows[r] || [];
                             const rowObj = {};
                             let hasData = false;
-
                             for (const [exCol, slot] of Object.entries(colMap)) {
                                 const val = parseExNum(rowArr[parseInt(exCol)]);
                                 if (val > 0) {
@@ -2834,22 +2806,24 @@
                         }
 
                         const id = generateOtomatisId(mat, tglStr);
-                        final.push([
-                            id, mat, kat, stok, 0, "Kg", sup, tglStr, sjKg, sjSak, nokontainer, pet, qc, noTim, "", JSON.stringify(scData), plat
-                        ]);
+                        final.push({ id, nama: mat, kat, stok, min: 0, sat: "Kg", supplier: sup, tanggal: tglStr, sj_kg: sjKg, sj_sak: sjSak, ecmu: nkRow ? String(nkRow[4] || "") : "", petugas: petRow ? String(petRow[4] || "") : "", qc: qcRow ? String(qcRow[4] || "") : "", notimbang: noTimRow ? String(noTimRow[4] || "") : "", plat, catatan: "", scalingData: JSON.stringify(scData) });
                     } else {
                         for (let i = 1; i < rows.length; i++) {
                             const r = rows[i];
                             if (!r[0]) continue;
                             const id = generateOtomatisId(String(r[0]), r[4]);
-                            final.push([
-                                id, r[0] || "", r[1] || "", r[2] || 0, 0, "Kg", r[3] || "", r[4] || "", r[5] || 0, r[6] || 0,
-                                r[7] || "", r[8] || "", r[9] || "", r[11] || "", r[12] || "", "", r[10] || ""
-                            ]);
+                            final.push({ id, nama: r[0] || "", kat: r[1] || "", stok: r[2] || 0, min: 0, sat: "Kg", supplier: r[3] || "", tanggal: r[4] || "", sj_kg: r[5] || 0, sj_sak: r[6] || 0, ecmu: r[7] || "", petugas: r[8] || "", qc: r[9] || "", notimbang: r[11] || "", plat: r[10] || "", catatan: r[12] || "", scalingData: "" });
                         }
                     }
 
-                    await apiFetch("POST", gudangAktif, { action: "import", data: final });
+                    // Simpan ke Firebase atau Apps Script
+                    if (fbReady) {
+                        await firebaseBatchWrite(gudangAktif, final, 'set');
+                        if (SYNC_TO_SHEET) syncToSheet(gudangAktif, { action: "import", data: final.map(f => [f.id, f.nama, f.kat, f.stok, f.min, f.sat, f.supplier, f.tanggal, f.sj_kg, f.sj_sak, f.ecmu, f.petugas, f.qc, f.notimbang, f.catatan, f.scalingData, f.plat]) });
+                    } else {
+                        await apiFetch("POST", gudangAktif, { action: "import", data: final.map(f => [f.id, f.nama, f.kat, f.stok, f.min, f.sat, f.supplier, f.tanggal, f.sj_kg, f.sj_sak, f.ecmu, f.petugas, f.qc, f.notimbang, f.catatan, f.scalingData, f.plat]) });
+                    }
+
                     showToast(final.length + " data diimport");
                     tutupModalImport();
                     muatData(true);
@@ -2871,20 +2845,14 @@
                 [],
                 ["No.", "Raw 1", "Raw 2", "Raw 3", "Raw 4", "Raw 5", "Raw 6", "Raw 7", "Raw 8", "Rontokan"]
             ];
-
-            for (let i = 1; i <= 20; i++) {
-                data.push([i, 200.5, 210.1, 195.2, 188.4, 202.3, 199.9, 214.3, 205.7, 55.4]);
-            }
-
+            for (let i = 1; i <= 20; i++) data.push([i, 200.5, 210.1, 195.2, 188.4, 202.3, 199.9, 214.3, 205.7, 55.4]);
             data.push([]);
             data.push(["JML", 4010, 4202, 3904, 3768, 4046, 3998, 4286, 4114, 1108]);
             data.push(["Sak", 80, 80, 80, 80, 80, 80, 80, 80, 0]);
             data.push([]);
-            data.push([]);
             data.push(["Tanggal Bongkaran", "", "", ":", "12/05/2026"]);
             data.push(["Jumlah Total", "", "", ":", 33436, "Kg"]);
             data.push(["Jumlah Sak Total", "", "", ":", 640, "Sak"]);
-            data.push([]);
             data.push([]);
             data.push(["Jumlah Surat Jalan", "", "", ":", 33500, "Kg"]);
             data.push(["Jumlah Sak Surat Jalan", "", "", ":", 645, "Sak"]);
@@ -2897,13 +2865,14 @@
             data.push(["QC", "", "", ":", "Narno"]);
             data.push([]);
             data.push(["Nomor Timbangan", "", "", ":", "C1"]);
-
             const ws = XLSX.utils.aoa_to_sheet(data);
             XLSX.utils.book_append_sheet(wb, ws, "Laporan Scalling");
             XLSX.writeFile(wb, "Template_Import_CocoRiki.xlsx");
         }
 
-        // ===== EXPORT =====
+        // ============================================================
+        //  EXPORT
+        // ============================================================
         function bukaModalExport() {
             const all = dataBahan.length;
             const filtered = getFiltered().length;
@@ -2914,120 +2883,52 @@
             document.getElementById("modal-export-overlay").classList.add("open");
         }
 
-        function tutupModalExport() {
-            document.getElementById("modal-export-overlay").classList.remove("open");
-        }
+        function tutupModalExport() { document.getElementById("modal-export-overlay").classList.remove("open"); }
 
         function eksporData() {
             const useFilter = document.getElementById("opt-filter").checked;
             const source = useFilter ? getFiltered() : dataBahan;
             if (!source.length) { showToast("Tidak ada data untuk diekspor", true); return; }
-
             const btn = document.getElementById("btn-proses-export");
-            btn.disabled = true;
-            btn.innerHTML = '<i class="ti ti-loader"></i> Memproses...';
-
+            btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader"></i> Memproses...';
             try {
-                function hitungTotalSak(d) {
-                    return hitungSakFromScaling(d);
-                }
-
-                const header = [
-                    "Kode", "Tanggal", "Material", "Kategori", "Supplier", "Plat",
-                    "No. Timbangan", "Berat Total (Kg)", "Jumlah Sak",
-                    "SJ Kg", "SJ Sak", "Selisih Bongkaran (Kg)", "Selisih Sak",
-                    "No. Kontainer", "Petugas", "QC", "Catatan"
-                ];
-
+                const header = ["Kode", "Tanggal", "Material", "Kategori", "Supplier", "Plat", "No. Timbangan", "Berat Total (Kg)", "Jumlah Sak", "SJ Kg", "SJ Sak", "Selisih Bongkaran (Kg)", "Selisih Sak", "No. Kontainer", "Petugas", "QC", "Catatan"];
                 const sheetData = [header];
-
                 source.forEach(d => {
-                    const totalSak = hitungTotalSak(d);
+                    const totalSak = hitungSakFromScaling(d);
                     const stok = parseFloat(d.stok) || 0;
                     const sjKg = parseFloat(d.sj_kg) || 0;
                     const sjSak = parseInt(d.sj_sak) || 0;
                     const selisihKg = stok > 0 ? parseFloat((stok - sjKg).toFixed(1)) : "";
                     const selisihSak = totalSak > 0 ? (totalSak - sjSak) : "";
-
                     let tglDisplay = d.tanggal || "";
-                    if (tglDisplay) {
-                        const dt = localDate(tglDisplay);
-                        if (!isNaN(dt.getTime())) {
-                            tglDisplay = `${String(dt.getDate()).padStart(2, '0')}/${String(dt.getMonth() + 1).padStart(2, '0')}/${dt.getFullYear()}`;
-                        }
-                    }
-
-                    sheetData.push([
-                        d.id || "",
-                        tglDisplay,
-                        d.nama || "",
-                        d.kat || "",
-                        d.supplier || "",
-                        d.plat || "",
-                        d.notimbang || "",
-                        stok || "",
-                        totalSak || "",
-                        sjKg || "",
-                        sjSak || "",
-                        selisihKg,
-                        selisihSak,
-                        d.nokontainer || "",
-                        d.petugas || "",
-                        d.qc || "",
-                        d.catatan || ""
-                    ]);
+                    if (tglDisplay) { const dt = localDate(tglDisplay); if (!isNaN(dt.getTime())) tglDisplay = `${String(dt.getDate()).padStart(2, '0')}/${String(dt.getMonth() + 1).padStart(2, '0')}/${dt.getFullYear()}`; }
+                    sheetData.push([d.id || "", tglDisplay, d.nama || "", d.kat || "", d.supplier || "", d.plat || "", d.notimbang || "", stok || "", totalSak || "", sjKg || "", sjSak || "", selisihKg, selisihSak, d.ecmu || "", d.petugas || "", d.qc || "", d.catatan || ""]);
                 });
-
                 const wb = XLSX.utils.book_new();
                 const ws = XLSX.utils.aoa_to_sheet(sheetData);
-
-                const colWidths = header.map((h, i) => {
-                    let max = h.length;
-                    sheetData.slice(1).forEach(row => {
-                        const val = String(row[i] ?? "");
-                        if (val.length > max) max = val.length;
-                    });
-                    return { wch: Math.min(max + 2, 40) };
-                });
+                const colWidths = header.map((h, i) => { let max = h.length; sheetData.slice(1).forEach(row => { const val = String(row[i] ?? ""); if (val.length > max) max = val.length; }); return { wch: Math.min(max + 2, 40) }; });
                 ws['!cols'] = colWidths;
-
                 XLSX.utils.book_append_sheet(wb, ws, `Data ${gudangAktif}`);
-
                 const now = new Date();
                 const tglFile = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
-                const suffix = useFilter ? "_Filter" : "_Semua";
-                XLSX.writeFile(wb, `StokBahan_${gudangAktif}${suffix}_${tglFile}.xlsx`);
-
+                XLSX.writeFile(wb, `StokBahan_${gudangAktif}${useFilter ? "_Filter" : "_Semua"}_${tglFile}.xlsx`);
                 showToast(`${formatLokalInt(source.length)} data berhasil diekspor`);
                 tutupModalExport();
-            } catch (err) {
-                showToast("Gagal ekspor: " + err.message, true);
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="ti ti-file-spreadsheet"></i> Download Excel';
-            }
+            } catch (err) { showToast("Gagal ekspor: " + err.message, true); }
+            finally { btn.disabled = false; btn.innerHTML = '<i class="ti ti-file-spreadsheet"></i> Download Excel'; }
         }
 
+        // ============================================================
+        //  PARSE EXCEL HELPERS
+        // ============================================================
         function parseExDate(val) {
             if (!val) return "";
-            if (val instanceof Date && !isNaN(val.getTime())) {
-                const yyyy = val.getUTCFullYear();
-                const mm = String(val.getUTCMonth() + 1).padStart(2, '0');
-                const dd = String(val.getUTCDate()).padStart(2, '0');
-                return `${yyyy}-${mm}-${dd}`;
-            }
+            if (val instanceof Date && !isNaN(val.getTime())) { return `${val.getUTCFullYear()}-${String(val.getUTCMonth() + 1).padStart(2, '0')}-${String(val.getUTCDate()).padStart(2, '0')}`; }
             const s = String(val).split(" ")[0];
             const p = s.split("/");
             if (p.length === 3) return `${p[2]}-${p[1].padStart(2, '0')}-${p[0].padStart(2, '0')}`;
-            if (typeof val === "number") {
-                const d = new Date(Math.round((val - 25569) * 86400 * 1000));
-                if (!isNaN(d.getTime())) {
-                    const yyyy = d.getUTCFullYear();
-                    const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
-                    const dd = String(d.getUTCDate()).padStart(2, '0');
-                    return `${yyyy}-${mm}-${dd}`;
-                }
-            }
+            if (typeof val === "number") { const d = new Date(Math.round((val - 25569) * 86400 * 1000)); if (!isNaN(d.getTime())) return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`; }
             return "";
         }
 
