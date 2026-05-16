@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="id">
 
@@ -1351,8 +1352,7 @@
             <div class="brand">
                 <div class="brand-logo"><i class="ti ti-box"></i></div>
                 <div>
-                    <div class="brand-name">StokBahan <span id="fb-badge" class="fb-status off"><i
-                                class="ti ti-cloud-off"></i> Offline</span></div>
+                    <div class="brand-name">StokBahan <span id="fb-badge" class="fb-status off"><i class="ti ti-cloud-off"></i> Offline</span></div>
                     <div class="brand-sub">Manajemen Bahan Baku</div>
                 </div>
             </div>
@@ -1813,7 +1813,7 @@
                 const badge = document.getElementById("fb-badge");
                 if (badge) {
                     badge.className = "fb-status ok";
-                    badge.innerHTML = '<i class="ti ti-cloud"></i> Firebase';
+                    badge.innerHTML = '<i class="ti ti-cloud"></i> Online';
                 }
 
                 return true;
@@ -2014,7 +2014,7 @@
         //  MIGRASI DARI SPREADSHEET
         // ============================================================
         async function migrasiDariSpreadsheet() {
-            if (!fbReady) return showToast("Firebase belum dikonfigurasi!", true);
+            if (!fbReady) return showToast("Database belum terhubung!", true);
             const btn = document.getElementById("btn-migrate");
             btn.disabled = true;
             btn.innerHTML = '<i class="ti ti-loader"></i> Migrasi...';
@@ -2061,11 +2061,11 @@
                 }
 
                 if (totalMigrated > 0) {
-                    showToast(`${totalMigrated} data berhasil dimigrasi ke Firebase!`);
+                    showToast(`${totalMigrated} data berhasil dimigrasi!`);
                     document.getElementById("migrate-section").style.display = "none";
                     muatSummaryKartu();
                 } else {
-                    showToast("Semua data sudah ada di Firebase, tidak perlu migrasi.");
+                    showToast("Semua data sudah ada, tidak perlu migrasi.");
                     document.getElementById("migrate-section").style.display = "none";
                 }
             } catch (err) {
@@ -2184,7 +2184,7 @@
                 updateStats();
                 renderTable();
             } catch (e) {
-                tbody.innerHTML = `<tr><td colspan="11"><div class="empty"><i class="ti ti-wifi-off"></i>${e.message.includes("SCRIPT_URL") ? "Firebase & SCRIPT_URL belum dikonfigurasi." : "Gagal memuat data: " + e.message}<br><button class="retry-btn" onclick="muatData(true)"><i class="ti ti-refresh"></i> Coba Lagi</button></div></td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="11"><div class="empty"><i class="ti ti-wifi-off"></i>${e.message.includes("SCRIPT_URL") ? "Database belum dikonfigurasi." : "Gagal memuat data: " + e.message}<br><button class="retry-btn" onclick="muatData(true)"><i class="ti ti-refresh"></i> Coba Lagi</button></div></td></tr>`;
             }
         }
 
