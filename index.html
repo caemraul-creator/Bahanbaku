@@ -1,4 +1,5 @@
 
+
 <!doctype html>
 <html lang="id">
 
@@ -1560,6 +1561,7 @@
                                 <th>Raw 6</th>
                                 <th>Raw 7</th>
                                 <th>Raw 8</th>
+                                <th>Raw 9</th>
                                 <th>Rontokan</th>
                             </tr>
                         </thead>
@@ -1577,6 +1579,7 @@
                                 <th id="jml-7">0</th>
                                 <th id="jml-8">0</th>
                                 <th id="jml-9">0</th>
+                                <th id="jml-10">0</th>
                             </tr>
                             <tr class="sak-row">
                                 <th>Sak</th>
@@ -1589,6 +1592,7 @@
                                 <th id="sak-7">0</th>
                                 <th id="sak-8">0</th>
                                 <th id="sak-9">0</th>
+                                <th id="sak-10">0</th>
                             </tr>
                         </tfoot>
                     </table>
@@ -2440,7 +2444,7 @@
             let html = "";
             for (let i = 1; i <= 20; i++) {
                 html += `<tr><td>${i}</td>`;
-                for (let c = 1; c <= 9; c++) {
+                for (let c = 1; c <= 10; c++) {
                     html += `<td><div class="cell-wrap"><input type="text" inputmode="decimal" class="sc-input-kg" data-col="${c}" oninput="hitungScalling()" onblur="formatInputKg(this)" placeholder="-" title="Berat (Kg)"><span class="sep">/</span><input type="text" inputmode="numeric" class="sc-input-sak" data-col="${c}" oninput="hitungScalling()" onblur="formatInputSak(this)" placeholder="-" title="Jumlah Sak"></div></td>`;
                 }
                 html += `</tr>`;
@@ -2457,7 +2461,7 @@
         function _hitungScallingNow() {
             let grandTotal = 0, grandSak = 0;
             const allKg = document.querySelectorAll('.sc-input-kg');
-            for (let c = 1; c <= 9; c++) {
+            for (let c = 1; c <= 10; c++) {
                 let colSum = 0, colSak = 0;
                 allKg.forEach(kgInp => {
                     if (kgInp.dataset.col != c) return;
@@ -2771,20 +2775,20 @@
                         const headerRow = rows[3] || [];
                         const colMap = {};
                         let mappedAny = false;
-                        for (let i = 1; i < headerRow.length; i++) { const lbl = String(headerRow[i] || "").trim(); const rawM = lbl.match(/^Raw\s*(\d+)$/i); if (rawM) { colMap[i] = parseInt(rawM[1]); mappedAny = true; } else if (/rontokan/i.test(lbl)) { colMap[i] = 9; mappedAny = true; } }
-                        if (!mappedAny) for (let i = 1; i <= 9; i++) colMap[i] = i;
+                        for (let i = 1; i < headerRow.length; i++) { const lbl = String(headerRow[i] || "").trim(); const rawM = lbl.match(/^Raw\s*(\d+)$/i); if (rawM) { colMap[i] = parseInt(rawM[1]); mappedAny = true; } else if (/rontokan/i.test(lbl)) { colMap[i] = 10; mappedAny = true; } }
+                        if (!mappedAny) for (let i = 1; i <= 10; i++) colMap[i] = i;
 
                         const sakTotRow = findRowByLabel("Sak");
                         const sakTotPerCol = {};
                         if (sakTotRow) for (const [exCol, slot] of Object.entries(colMap)) sakTotPerCol[slot] = parseInt(sakTotRow[parseInt(exCol)]) || 0;
 
                         const cellCount = {};
-                        for (let s = 1; s <= 9; s++) cellCount[s] = 0;
+                        for (let s = 1; s <= 10; s++) cellCount[s] = 0;
                         for (let r = 4; r < 24; r++) { const ra = rows[r] || []; for (const [exCol, slot] of Object.entries(colMap)) { if (parseExNum(ra[parseInt(exCol)]) > 0) cellCount[slot]++; } }
 
                         const scData = [];
                         const sakUsed = {};
-                        for (let s = 1; s <= 9; s++) sakUsed[s] = 0;
+                        for (let s = 1; s <= 10; s++) sakUsed[s] = 0;
                         for (let r = 4; r < 24; r++) {
                             const rowArr = rows[r] || [];
                             const rowObj = {};
@@ -2792,7 +2796,7 @@
                             for (const [exCol, slot] of Object.entries(colMap)) {
                                 const val = parseExNum(rowArr[parseInt(exCol)]);
                                 if (val > 0) {
-                                    const isRontokan = slot === 9;
+                                    const isRontokan = slot === 10;
                                     const total = sakTotPerCol[slot] || 0;
                                     const cnt = cellCount[slot] || 1;
                                     let sak = isRontokan ? 0 : Math.floor(total / cnt);
@@ -2843,12 +2847,12 @@
                 ["SCALLING RAW MATERIAL PT. COCO RIKI INTERNATIONAL"],
                 ["Sumatra Charcoal Mr. ABROR PLAT B 9573 TYW"],
                 [],
-                ["No.", "Raw 1", "Raw 2", "Raw 3", "Raw 4", "Raw 5", "Raw 6", "Raw 7", "Raw 8", "Rontokan"]
+                ["No.", "Raw 1", "Raw 2", "Raw 3", "Raw 4", "Raw 5", "Raw 6", "Raw 7", "Raw 8", "Raw 9", "Rontokan"]
             ];
-            for (let i = 1; i <= 20; i++) data.push([i, 200.5, 210.1, 195.2, 188.4, 202.3, 199.9, 214.3, 205.7, 55.4]);
+            for (let i = 1; i <= 20; i++) data.push([i, 200.5, 210.1, 195.2, 188.4, 202.3, 199.9, 214.3, 205.7, 198.6, 55.4]);
             data.push([]);
-            data.push(["JML", 4010, 4202, 3904, 3768, 4046, 3998, 4286, 4114, 1108]);
-            data.push(["Sak", 80, 80, 80, 80, 80, 80, 80, 80, 0]);
+            data.push(["JML", 4010, 4202, 3904, 3768, 4046, 3998, 4286, 4114, 3972, 1108]);
+            data.push(["Sak", 80, 80, 80, 80, 80, 80, 80, 80, 80, 0]);
             data.push([]);
             data.push(["Tanggal Bongkaran", "", "", ":", "12/05/2026"]);
             data.push(["Jumlah Total", "", "", ":", 33436, "Kg"]);
