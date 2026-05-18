@@ -1,5 +1,4 @@
 
-
 <!doctype html>
 <html lang="id">
 
@@ -13,6 +12,8 @@
         href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css" />
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -1712,11 +1713,11 @@
     <div class="overlay" id="modal-export-overlay" onclick="if(event.target===this) tutupModalExport()">
         <div class="modal" style="max-width: 420px;">
             <div class="modal-title">
-                <span>Export Data Excel</span>
+                <span>Export Data</span>
                 <button class="modal-close" onclick="tutupModalExport()"><i class="ti ti-x"></i></button>
             </div>
-            <div style="margin-bottom: 1.25rem;">
-                <p style="font-size: 13px; color: var(--text2); margin-bottom: 1rem;">Pilih data yang ingin diekspor
+            <div style="margin-bottom: 1rem;">
+                <p style="font-size: 13px; color: var(--text2); margin-bottom: 0.75rem;">Pilih data yang ingin diekspor
                     untuk gudang <strong id="export-gudang-lbl"></strong>:</p>
                 <div style="display: flex; flex-direction: column; gap: 10px;">
                     <label
@@ -1731,6 +1732,15 @@
                     </label>
                     <label
                         style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; padding: 12px; border: 0.5px solid var(--border); border-radius: var(--radius); transition: background 0.15s;">
+                        <input type="radio" name="export-opt" value="selected" id="opt-selected"
+                            style="margin-top: 2px; accent-color: #0d9463;">
+                        <div>
+                            <div style="font-size: 13px; font-weight: 600;">Data Terpilih (Centang)</div>
+                            <div style="font-size: 12px; color: var(--text2);" id="opt-selected-lbl">Ekspor data yang dicentang di tabel</div>
+                        </div>
+                    </label>
+                    <label
+                        style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; padding: 12px; border: 0.5px solid var(--border); border-radius: var(--radius); transition: background 0.15s;">
                         <input type="radio" name="export-opt" value="filter" id="opt-filter"
                             style="margin-top: 2px; accent-color: #0d9463;">
                         <div>
@@ -1741,12 +1751,35 @@
                     </label>
                 </div>
             </div>
+            <div style="margin-bottom: 1.25rem;">
+                <p style="font-size: 13px; color: var(--text2); margin-bottom: 0.75rem;">Format export:</p>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <label
+                        style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; padding: 12px; border: 0.5px solid var(--border); border-radius: var(--radius); transition: background 0.15s;">
+                        <input type="radio" name="export-format" value="pdf" id="opt-pdf" checked
+                            style="margin-top: 2px; accent-color: #0d9463;">
+                        <div>
+                            <div style="font-size: 13px; font-weight: 600;">PDF (Scalling Report)</div>
+                            <div style="font-size: 12px; color: var(--text2);">Laporan scalling per material, format A4 portrait</div>
+                        </div>
+                    </label>
+                    <label
+                        style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; padding: 12px; border: 0.5px solid var(--border); border-radius: var(--radius); transition: background 0.15s;">
+                        <input type="radio" name="export-format" value="excel" id="opt-excel"
+                            style="margin-top: 2px; accent-color: #0d9463;">
+                        <div>
+                            <div style="font-size: 13px; font-weight: 600;">Excel (.xlsx)</div>
+                            <div style="font-size: 12px; color: var(--text2);">Tabel ringkasan semua data</div>
+                        </div>
+                    </label>
+                </div>
+            </div>
             <div style="display: flex; gap: 10px;">
                 <button class="btn-sm btn-outline" onclick="tutupModalExport()"
                     style="flex: 1; justify-content: center;">Batal</button>
-                <button class="btn-sm" onclick="eksporData()" id="btn-proses-export"
+                <button class="btn-sm" onclick="prosesExport()" id="btn-proses-export"
                     style="flex: 1; justify-content: center; background: #0d9463;">
-                    <i class="ti ti-file-spreadsheet"></i> Download Excel
+                    <i class="ti ti-download"></i> Download
                 </button>
             </div>
         </div>
@@ -2880,18 +2913,44 @@
         function bukaModalExport() {
             const all = dataBahan.length;
             const filtered = getFiltered().length;
+            const selected = _selectedIds.size;
             document.getElementById("export-gudang-lbl").textContent = gudangAktif;
             document.getElementById("opt-semua-lbl").textContent = `${formatLokalInt(all)} data tersedia`;
+            document.getElementById("opt-selected-lbl").textContent = selected > 0 ? `${formatLokalInt(selected)} data dicentang` : "Belum ada data dicentang";
             document.getElementById("opt-filter-lbl").textContent = `${formatLokalInt(filtered)} data sesuai filter`;
-            document.getElementById("opt-semua").checked = true;
+            // Auto-select 'selected' if there are checked items, otherwise 'semua'
+            if (selected > 0) {
+                document.getElementById("opt-selected").checked = true;
+            } else {
+                document.getElementById("opt-semua").checked = true;
+            }
+            // Disable 'selected' option if nothing checked
+            document.getElementById("opt-selected").disabled = selected === 0;
+            document.getElementById("opt-selected").parentElement.style.opacity = selected > 0 ? '1' : '0.5';
             document.getElementById("modal-export-overlay").classList.add("open");
         }
 
         function tutupModalExport() { document.getElementById("modal-export-overlay").classList.remove("open"); }
 
-        function eksporData() {
-            const useFilter = document.getElementById("opt-filter").checked;
-            const source = useFilter ? getFiltered() : dataBahan;
+        function getExportSource() {
+            const opt = document.querySelector('input[name="export-opt"]:checked');
+            if (opt && opt.value === 'selected') {
+                return dataBahan.filter(d => _selectedIds.has(d.id));
+            } else if (opt && opt.value === 'filter') {
+                return getFiltered();
+            } else {
+                return dataBahan;
+            }
+        }
+
+        function prosesExport() {
+            const fmt = document.querySelector('input[name="export-format"]:checked');
+            if (fmt && fmt.value === 'pdf') eksporPDF();
+            else eksporExcel();
+        }
+
+        function eksporExcel() {
+            const source = getExportSource();
             if (!source.length) { showToast("Tidak ada data untuk diekspor", true); return; }
             const btn = document.getElementById("btn-proses-export");
             btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader"></i> Memproses...';
@@ -2916,11 +2975,322 @@
                 XLSX.utils.book_append_sheet(wb, ws, `Data ${gudangAktif}`);
                 const now = new Date();
                 const tglFile = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
-                XLSX.writeFile(wb, `StokBahan_${gudangAktif}${useFilter ? "_Filter" : "_Semua"}_${tglFile}.xlsx`);
+                const opt = document.querySelector('input[name="export-opt"]:checked');
+                const suffix = opt && opt.value === 'selected' ? '_Terpilih' : opt && opt.value === 'filter' ? '_Filter' : '_Semua';
+                XLSX.writeFile(wb, `StokBahan_${gudangAktif}${suffix}_${tglFile}.xlsx`);
                 showToast(`${formatLokalInt(source.length)} data berhasil diekspor`);
                 tutupModalExport();
             } catch (err) { showToast("Gagal ekspor: " + err.message, true); }
-            finally { btn.disabled = false; btn.innerHTML = '<i class="ti ti-file-spreadsheet"></i> Download Excel'; }
+            finally { btn.disabled = false; btn.innerHTML = '<i class="ti ti-download"></i> Download'; }
+        }
+
+        // ============================================================
+        //  EXPORT PDF —SCALLING REPORT
+        // ============================================================
+        function eksporPDF() {
+            const source = getExportSource();
+            if (!source.length) { showToast("Tidak ada data untuk diekspor", true); return; }
+            const btn = document.getElementById("btn-proses-export");
+            btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader"></i> Memproses...';
+
+            try {
+                const { jsPDF } = window.jspdf;
+
+                source.forEach((d, idx) => {
+                    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+                    const pw = doc.internal.pageSize.getWidth();
+                    const ph = doc.internal.pageSize.getHeight();
+                    const ml = 10, mr = 10, mt = 10;
+                    const cw = pw - ml - mr;
+
+                    // ---- HEADER ----
+                    doc.setFontSize(12);
+                    doc.setFont(undefined, 'bold');
+                    doc.setTextColor(26, 26, 24);
+                    doc.text('SCALLING RAW MATERIAL PT. COCO RIKI INTERNATIONAL', pw / 2, mt + 5, { align: 'center' });
+
+                    // Subtitle: Material, Supplier, Plat
+                    doc.setFontSize(9);
+                    doc.setFont(undefined, 'normal');
+                    const subtitle = `${d.nama || ''} ${d.supplier || ''} PLAT ${d.plat || ''}`;
+                    doc.text(subtitle.trim(), pw / 2, mt + 11, { align: 'center' });
+
+                    // ---- GUDANG BADGE (di atas tabel) ----
+                    const badgeY = mt + 15;
+                    const gudangLabel = `GUDANG ${gudangAktif ? gudangAktif.toUpperCase() : ''}`;
+                    doc.setFontSize(7.5);
+                    doc.setFont(undefined, 'bold');
+                    const labelW = doc.getTextWidth(gudangLabel) + 6;
+                    const labelH = 5;
+                    const labelX = ml;
+                    // Badge background (orange untuk Kalipucang, hijau untuk Troso)
+                    const isKali = gudangAktif === 'Kalipucang';
+                    doc.setFillColor(isKali ? 239 : 59, isKali ? 159 : 130, isKali ? 39 : 80);
+                    doc.roundedRect(labelX, badgeY, labelW, labelH, 1.5, 1.5, 'F');
+                    // Badge text
+                    doc.setTextColor(255, 255, 255);
+                    doc.text(gudangLabel, labelX + 3, badgeY + 3.5);
+
+                    // ---- SCALLING TABLE ----
+                    const NUM_RAW = 9;
+                    const colHeaders = ['No.'];
+                    for (let r = 1; r <= NUM_RAW; r++) colHeaders.push('Raw ' + r);
+                    colHeaders.push('Rontokan');
+
+                    // Parse scalingData
+                    let parsed = [];
+                    try { parsed = JSON.parse(d.scalingData || '[]'); } catch (e) {}
+
+                    // Build table body
+                    const tableBody = [];
+                    const colTotals = {};
+                    const colSakTotals = {};
+                    for (let c = 1; c <= NUM_RAW + 1; c++) { colTotals[c] = 0; colSakTotals[c] = 0; }
+
+                    for (let i = 0; i < 20; i++) {
+                        const row = [String(i + 1)];
+                        const rd = parsed[i];
+                        for (let c = 1; c <= NUM_RAW + 1; c++) {
+                            let kgVal = '';
+                            if (rd && rd[c]) {
+                                const v = parseFloat(rd[c].kg) || 0;
+                                if (v > 0) { kgVal = formatLokal(v); colTotals[c] += v; }
+                                const s = parseInt(rd[c].sak) || 0;
+                                colSakTotals[c] += s;
+                            }
+                            row.push(kgVal);
+                        }
+                        tableBody.push(row);
+                    }
+
+                    // JML row
+                    const jmlRow = ['JML'];
+                    for (let c = 1; c <= NUM_RAW + 1; c++) jmlRow.push(colTotals[c] > 0 ? formatLokal(colTotals[c]) : '');
+                    tableBody.push(jmlRow);
+
+                    // Sak row
+                    const sakRow = ['Sak'];
+                    for (let c = 1; c <= NUM_RAW + 1; c++) sakRow.push(colSakTotals[c] > 0 ? formatLokalInt(colSakTotals[c]) : '0');
+                    tableBody.push(sakRow);
+
+                    const totalKg = Object.values(colTotals).reduce((a, b) => a + b, 0);
+                    const totalSak = Object.values(colSakTotals).reduce((a, b) => a + b, 0);
+
+                    doc.autoTable({
+                        startY: mt + 22,
+                        margin: { left: ml, right: mr },
+                        head: [colHeaders],
+                        body: tableBody,
+                        theme: 'grid',
+                        styles: {
+                            fontSize: 8.5,
+                            cellPadding: 0.6,
+                            halign: 'center',
+                            valign: 'middle',
+                            lineColor: [0, 0, 0],
+                            lineWidth: 0.15,
+                            overflow: 'visible'
+                        },
+                        headStyles: {
+                            fillColor: [234, 245, 238],
+                            textColor: [26, 26, 24],
+                            fontStyle: 'bold',
+                            fontSize: 5.5,
+                            cellPadding: 0.5
+                        },
+                        columnStyles: {
+                            0: { fontStyle: 'bold', cellWidth: 6, fontSize: 7 }
+                        },
+                        didParseCell: function(data) {
+                            // Highlight JML and Sak rows
+                            if (data.row.index >= 20) {
+                                data.cell.styles.fontStyle = 'bold';
+                                data.cell.styles.fillColor = [245, 244, 241];
+                            }
+                        }
+                    });
+
+                    // ---- FOOTER INFO ----
+                    const fy = doc.lastAutoTable.finalY + 6;
+                    const stokVal = parseFloat(d.stok) || 0;
+                    const sjKg = parseFloat(d.sj_kg) || 0;
+                    const sjSak = parseInt(d.sj_sak) || 0;
+                    const selisihKg = stokVal > 0 ? stokVal - sjKg : 0;
+                    const selisihSak = totalSak > 0 ? totalSak - sjSak : 0;
+
+                    // Format tanggal
+                    let tglDisplay = d.tanggal || '';
+                    let hariNama = '';
+                    if (tglDisplay) {
+                        const dt = localDate(tglDisplay);
+                        if (!isNaN(dt.getTime())) {
+                            const hr = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+                            hariNama = hr[dt.getDay()];
+                            tglDisplay = `${String(dt.getDate()).padStart(2,'0')}/${String(dt.getMonth()+1).padStart(2,'0')}/${String(dt.getFullYear()).slice(2)}`;
+                        }
+                    }
+
+                    // === Decorative divider line ===
+                    let curY = fy;
+                    doc.setDrawColor(180, 210, 190);
+                    doc.setLineWidth(0.4);
+                    doc.line(ml, curY, pw - mr, curY);
+                    curY += 3;
+
+                    // === Helper: draw section box with header ===
+                    function drawSectionBox(x, y, w, h, headerText, headerBg, headerFg, bodyBg) {
+                        const headerH = 4.5;
+                        const bodyH = h - headerH;
+                        // Header background
+                        doc.setFillColor(headerBg[0], headerBg[1], headerBg[2]);
+                        doc.roundedRect(x, y, w, headerH, 1, 1, 'F');
+                        // Header text
+                        doc.setFontSize(5.5);
+                        doc.setFont(undefined, 'bold');
+                        doc.setTextColor(headerFg[0], headerFg[1], headerFg[2]);
+                        doc.text(headerText, x + 2, y + 3.2);
+                        // Body background
+                        doc.setFillColor(bodyBg[0], bodyBg[1], bodyBg[2]);
+                        doc.roundedRect(x, y + headerH, w, bodyH, 1, 1, 'F');
+                        // Border
+                        doc.setDrawColor(180, 210, 190);
+                        doc.setLineWidth(0.2);
+                        doc.roundedRect(x, y, w, h, 1, 1, 'S');
+                    }
+
+                    // === Helper: draw key-value row inside a box ===
+                    function drawInfoRow(x, y, label, value, labelW, accentColor) {
+                        // Label background pill
+                        const pillH = 3.8;
+                        const pillW = labelW + 2;
+                        doc.setFillColor(accentColor[0], accentColor[1], accentColor[2]);
+                        doc.roundedRect(x, y - 2.8, pillW, pillH, 0.8, 0.8, 'F');
+                        // Label text
+                        doc.setFontSize(5);
+                        doc.setFont(undefined, 'bold');
+                        doc.setTextColor(255, 255, 255);
+                        doc.text(label, x + 1, y - 0.2);
+                        // Value text
+                        doc.setFontSize(8.5);
+                        doc.setFont(undefined, 'normal');
+                        doc.setTextColor(40, 40, 38);
+                        doc.text(value, x + pillW + 1.5, y - 0.2);
+                    }
+
+                    // === LEFT COLUMN: Data Bongkaran ===
+                    const colW = (cw - 6) / 2;
+                    const lx = ml;
+                    const leftRows = [
+                        ['Tanggal Bongkaran', `${tglDisplay} ${hariNama}`],
+                        ['Jumlah Total', `${formatLokal(stokVal)} Kg`],
+                        ['Sak Total', `${formatLokalInt(totalSak)} Sak`],
+                        ['Surat Jalan', `${formatLokal(sjKg)} Kg`],
+                        ['Sak Surat Jalan', `${formatLokalInt(sjSak)} Sak`],
+                    ];
+                    const leftRowH = 5;
+                    const leftBodyH = leftRows.length * leftRowH + 3;
+                    const leftBoxH = 4.5 + leftBodyH;
+                    drawSectionBox(lx, curY, colW, leftBoxH, 'DATA BONGKARAN', [59, 130, 80], [255,255,255], [240, 253, 244]);
+
+                    let rowY = curY + 4.5 + 4.5;
+                    leftRows.forEach(function(item) {
+                        drawInfoRow(lx + 3, rowY, item[0], item[1], 30, [59, 130, 80]);
+                        rowY += leftRowH;
+                    });
+
+                    // === RIGHT COLUMN: Info Kendaraan ===
+                    const rx = ml + colW + 6;
+                    const rightRows = [
+                        ['ECMU / Kontainer', `${d.ecmu || '-'}`],
+                        ['No. Timbangan', `${d.notimbang || '-'}`],
+                        ['Petugas Timbang', `${d.petugas || '-'}`],
+                        ['QC', `${d.qc || '-'}`],
+                    ];
+                    const rightBodyH = rightRows.length * leftRowH + 3;
+                    const rightBoxH = 4.5 + rightBodyH;
+                    drawSectionBox(rx, curY, colW, rightBoxH, 'INFO KENDARAAN & PETUGAS', [24, 95, 165], [255,255,255], [230, 241, 251]);
+
+                    rowY = curY + 4.5 + 4.5;
+                    rightRows.forEach(function(item) {
+                        drawInfoRow(rx + 3, rowY, item[0], item[1], 30, [24, 95, 165]);
+                        rowY += leftRowH;
+                    });
+
+                    curY += Math.max(leftBoxH, rightBoxH) + 5;
+
+                    // === SELISIH SECTION (full width) ===
+                    const selisihRows = [
+                        ['Selisih Bongkaran', `${formatLokal(selisihKg)} Kg`, selisihKg < 0 ? [180, 50, 50] : [59, 130, 80]],
+                        ['Selisih Sak', `${formatLokalInt(selisihSak)} Sak`, selisihSak < 0 ? [180, 50, 50] : [59, 130, 80]],
+                    ];
+                    const selisihBodyH = selisihRows.length * leftRowH + 3;
+                    const selisihBoxH = 4.5 + selisihBodyH;
+                    const selisihAccent = selisihKg < 0 || selisihSak < 0 ? [180, 80, 30] : [59, 130, 80];
+                    const selisihBg = selisihKg < 0 || selisihSak < 0 ? [252, 235, 218] : [240, 253, 244];
+                    drawSectionBox(lx, curY, cw, selisihBoxH, 'SELISIH (BONGKAR - SURAT JALAN)', selisihAccent, [255,255,255], selisihBg);
+
+                    rowY = curY + 4.5 + 4.5;
+                    selisihRows.forEach(function(item) {
+                        drawInfoRow(lx + 3, rowY, item[0], item[1], 30, item[2]);
+                        rowY += leftRowH;
+                    });
+                    curY += selisihBoxH + 4;
+
+                    // === CATATAN SECTION ===
+                    if (d.catatan && d.catatan.trim()) {
+                        const catatanText = d.catatan.trim();
+                        doc.setFontSize(8);
+                        doc.setFont(undefined, 'bold');
+                        doc.setTextColor(130, 100, 30);
+                        doc.text('CATATAN:', lx + 2, curY);
+                        curY += 4;
+                        doc.setFont(undefined, 'normal');
+                        doc.setTextColor(80, 70, 40);
+                        doc.setFontSize(8);
+                        const catatanLines = doc.splitTextToSize(catatanText, cw - 4);
+                        doc.text(catatanLines, lx + 2, curY);
+                        curY += catatanLines.length * 4 + 3;
+                    }
+
+                    // === FOOTER LINE ===
+                    doc.setDrawColor(180, 210, 190);
+                    doc.setLineWidth(0.3);
+                    doc.line(ml, curY, pw - mr, curY);
+                    curY += 4;
+                    doc.setFontSize(6.5);
+                    doc.setFont(undefined, 'italic');
+                    doc.setTextColor(160, 160, 156);
+                    doc.text('Dokumen ini dikeluarkan oleh - Manajemen Bahan Baku PT. Coco Riki International', pw / 2, curY, { align: 'center' });
+                    curY += 3.5;
+                    const printDate = new Date();
+                    const printStr = `Dicetak: ${String(printDate.getDate()).padStart(2,'0')}/${String(printDate.getMonth()+1).padStart(2,'0')}/${printDate.getFullYear()} ${String(printDate.getHours()).padStart(2,'0')}:${String(printDate.getMinutes()).padStart(2,'0')}`;
+                    doc.text(printStr, pw / 2, curY, { align: 'center' });
+
+                    // ---- FILE NAME ----
+                    let tglFile = '';
+                    if (d.tanggal) {
+                        const dt = localDate(d.tanggal);
+                        if (!isNaN(dt.getTime())) {
+                            tglFile = `${String(dt.getDate()).padStart(2,'0')}.${String(dt.getMonth()+1).padStart(2,'0')}.${dt.getFullYear()}`;
+                        }
+                    }
+                    const namaFile = `${d.nama || 'Material'} ${d.supplier || ''} ${tglFile}`.trim().replace(/\s+/g, ' ');
+
+                    if (idx < source.length - 1) {
+                        doc.save(namaFile + '.pdf');
+                    } else {
+                        doc.save(namaFile + '.pdf');
+                    }
+                });
+
+                showToast(`${formatLokalInt(source.length)} PDF berhasil diekspor`);
+                tutupModalExport();
+            } catch (err) {
+                showToast("Gagal ekspor PDF: " + err.message, true);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="ti ti-download"></i> Download';
+            }
         }
 
         // ============================================================
