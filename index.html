@@ -1,4 +1,5 @@
 
+
 <!doctype html>
 <html lang="id">
 
@@ -2778,7 +2779,7 @@
                     const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 });
                     if (rows.length < 5) throw new Error("Excel tidak valid");
 
-                    const isCocoFormat = String(rows[0][0] || "").includes("SCALLING RAW MATERIAL");
+                    const isCocoFormat = String(rows[0][0] || "").includes("SCALLING") && (String(rows[0][0] || "").includes("RAW MATERIAL") || String(rows[0][0] || "").includes("LOADING MATERIAL"));
                     const final = [];
 
                     if (isCocoFormat) {
@@ -2795,34 +2796,64 @@
                         const stokRow = findRowByLabel("Jumlah Total");
                         const sjKgRow = findRowByLabel("Jumlah Surat Jalan");
                         const sjSakRow = findRowByLabel("Jumlah Sak Surat Jalan");
-                        const nkRow = findRowByLabel("No. Kontainer") || findRowByLabel("ECMU");
+                        const nkRow = findRowByLabel("No. Kontainer") || findRowByLabel("ECMU") || findRowByLabel("No.Kontainer") || findRowByLabel("ECMU / Kontainer");
                         const petRow = findRowByLabel("Petugas Timbang");
                         const qcRow = findRowByLabel("QC");
-                        const noTimRow = findRowByLabel("Nomor Timbangan");
+                        const noTimRow = findRowByLabel("Nomor Timbangan") || findRowByLabel("No. Timbangan");
 
                         const tglStr = tglRow ? parseExDate(tglRow[4]) : "";
                         const stok = stokRow ? parseExNum(stokRow[4]) : 0;
                         const sjKg = sjKgRow ? parseExNum(sjKgRow[4]) : 0;
                         const sjSak = sjSakRow ? (parseInt(parseExNum(sjSakRow[4])) || 0) : 0;
 
-                        const headerRow = rows[3] || [];
+                        // --- Find header row (the row with "No." and "Raw" columns) ---
+                        let headerRowIdx = 3;
+                        for (let h = 2; h < Math.min(rows.length, 10); h++) {
+                            const testRow = rows[h] || [];
+                            if (String(testRow[0] || "").trim() === 'No.' && testRow.length >= 2) {
+                                const hasRaw = testRow.some((c, ci) => ci > 0 && /^Raw\s*\d+$/i.test(String(c || "").trim()));
+                                if (hasRaw) { headerRowIdx = h; break; }
+                            }
+                        }
+                        const headerRow = rows[headerRowIdx] || [];
                         const colMap = {};
                         let mappedAny = false;
                         for (let i = 1; i < headerRow.length; i++) { const lbl = String(headerRow[i] || "").trim(); const rawM = lbl.match(/^Raw\s*(\d+)$/i); if (rawM) { colMap[i] = parseInt(rawM[1]); mappedAny = true; } else if (/rontokan/i.test(lbl)) { colMap[i] = 10; mappedAny = true; } }
                         if (!mappedAny) for (let i = 1; i <= 10; i++) colMap[i] = i;
 
+                        // --- Find actual data range (scan until we hit JML or empty rows) ---
+                        let dataStartRow = headerRowIdx + 1;
+                        let dataEndRow = headerRowIdx + 1;
+                        for (let r = dataStartRow; r < rows.length; r++) {
+                            const firstVal = rows[r] ? rows[r][0] : undefined;
+                            const lbl = String(firstVal || "").trim().toLowerCase();
+                            if (lbl === 'jml' || lbl === 'sak' || lbl === '') { dataEndRow = r; break; }
+                            if (firstVal === undefined || firstVal === null || firstVal === '') { dataEndRow = r; break; }
+                            dataEndRow = r + 1;
+                        }
+
+                        // Find JML and Sak rows (they might not be immediately after data)
+                        const jmlRow = findRowByLabel("JML");
                         const sakTotRow = findRowByLabel("Sak");
                         const sakTotPerCol = {};
                         if (sakTotRow) for (const [exCol, slot] of Object.entries(colMap)) sakTotPerCol[slot] = parseInt(sakTotRow[parseInt(exCol)]) || 0;
 
+                        // Use JML row values as the definitive totals for stok if available
+                        let jmlTotalFromRow = 0;
+                        if (jmlRow) {
+                            for (const [exCol, slot] of Object.entries(colMap)) {
+                                jmlTotalFromRow += parseExNum(jmlRow[parseInt(exCol)]);
+                            }
+                        }
+
                         const cellCount = {};
                         for (let s = 1; s <= 10; s++) cellCount[s] = 0;
-                        for (let r = 4; r < 24; r++) { const ra = rows[r] || []; for (const [exCol, slot] of Object.entries(colMap)) { if (parseExNum(ra[parseInt(exCol)]) > 0) cellCount[slot]++; } }
+                        for (let r = dataStartRow; r < dataEndRow; r++) { const ra = rows[r] || []; for (const [exCol, slot] of Object.entries(colMap)) { if (parseExNum(ra[parseInt(exCol)]) > 0) cellCount[slot]++; } }
 
                         const scData = [];
                         const sakUsed = {};
                         for (let s = 1; s <= 10; s++) sakUsed[s] = 0;
-                        for (let r = 4; r < 24; r++) {
+                        for (let r = dataStartRow; r < dataEndRow; r++) {
                             const rowArr = rows[r] || [];
                             const rowObj = {};
                             let hasData = false;
@@ -2842,8 +2873,10 @@
                             scData.push(hasData ? rowObj : null);
                         }
 
+                        // Prefer JML row total for stok (more accurate), fallback to "Jumlah Total" row
+                        const finalStok = jmlTotalFromRow > 0 ? jmlTotalFromRow : stok;
                         const id = generateOtomatisId(mat, tglStr);
-                        final.push({ id, nama: mat, kat, stok, min: 0, sat: "Kg", supplier: sup, tanggal: tglStr, sj_kg: sjKg, sj_sak: sjSak, ecmu: nkRow ? String(nkRow[4] || "") : "", petugas: petRow ? String(petRow[4] || "") : "", qc: qcRow ? String(qcRow[4] || "") : "", notimbang: noTimRow ? String(noTimRow[4] || "") : "", plat, catatan: "", scalingData: JSON.stringify(scData) });
+                        final.push({ id, nama: mat, kat, stok: finalStok, min: 0, sat: "Kg", supplier: sup, tanggal: tglStr, sj_kg: sjKg, sj_sak: sjSak, ecmu: nkRow ? String(nkRow[4] || "") : "", petugas: petRow ? String(petRow[4] || "") : "", qc: qcRow ? String(qcRow[4] || "") : "", notimbang: noTimRow ? String(noTimRow[4] || "") : "", plat, catatan: "", scalingData: JSON.stringify(scData) });
                     } else {
                         for (let i = 1; i < rows.length; i++) {
                             const r = rows[i];
