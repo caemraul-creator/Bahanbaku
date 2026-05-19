@@ -15,7 +15,7 @@ const CONFIG = {
     },
 
     // ========== GOOGLE APPS SCRIPT URL ==========
-    SCRIPT_URL: "https://script.google.com/macros/s/AKfycbzCqr9cpYK-i5y7LdtL4rAY9X5j7paaAs9_vMXYn456Ip9q0wBM4ODlKybE5ZSOCNU5/exec",
+    SCRIPT_URL: "https://script.google.com/macros/s/AKfycbxSLgQWN2qWX0t1JQxeRm7KZB4bJkLrZaZfiC6cbcVKR7dx7v7LKeQ1qLn0-2psLdZ1/exec",
 
     // ========== SYNC KE SPREADSHEET ==========
     // true  → Setiap tambah/edit/hapus juga disimpan ke Spreadsheet (background)
